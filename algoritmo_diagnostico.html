@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico Inicial · Algoritmos y Estructura de Datos · UTN 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary:      #c47c3e;
+  --primary-dark: #a36030;
+  --primary-mid:  #d49868;
+  --bg-card:      #fdf7f2;
+  --bg-pale:      #faeee3;
+  --bg-section:   #f5e2cc;
+  --text-main:    #1c1410;
+  --text-muted:   #5a3e2a;
+  --text-hint:    #a07858;
+  --border:       #e8c8a4;
+  --border-light: #f2dfc4;
+  --success-bg:   #eaf5e0;
+  --success-fg:   #2e6620;
+  --success-bd:   #98c87c;
+  --error-bg:     #fdecea;
+  --error-fg:     #7a1c1c;
+  --error-bd:     #e8a8a0;
+  --radius:       10px;
+  --shadow:       0 2px 12px rgba(100,50,10,0.09);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  background:linear-gradient(160deg,#faeee3 0%,#fdf7f2 60%,#fef9f5 100%);
+  min-height:100vh;color:var(--text-main);font-size:15px;line-height:1.65;
+}
+.page-header{
+  background:var(--primary);padding:1.4rem 1.5rem 1.2rem;
+  text-align:center;position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 16px rgba(80,30,5,0.20);
+}
+.page-header .logo{font-size:11px;font-weight:600;letter-spacing:3px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:4px}
+.page-header h1{font-size:18px;font-weight:600;color:#fff;line-height:1.3}
+.page-header p{font-size:12px;color:rgba(255,255,255,0.65);margin-top:3px}
+.progress-wrap{background:#fff;border-bottom:1px solid var(--border-light);padding:0.7rem 1rem;position:sticky;top:72px;z-index:99;box-shadow:0 1px 6px rgba(100,50,10,0.07)}
+.steps{display:flex;gap:4px;max-width:680px;margin:0 auto}
+.step{flex:1;height:5px;border-radius:3px;background:var(--bg-section);transition:background 0.3s}
+.step.done{background:var(--primary-mid)}
+.step.active{background:var(--primary)}
+.step-labels{display:flex;gap:4px;max-width:680px;margin:4px auto 0}
+.step-lbl{flex:1;text-align:center;font-size:9.5px;font-weight:500;color:var(--text-hint);transition:color 0.3s;white-space:nowrap;overflow:hidden}
+.step-lbl.active{color:var(--primary);font-weight:600}
+.step-lbl.done{color:var(--primary-mid)}
+.container{max-width:680px;margin:0 auto;padding:1.5rem 1rem 3rem}
+.section{display:none}
+.section.active{display:block;animation:fadeIn 0.25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.section-header{margin-bottom:1.2rem}
+.section-badge{display:inline-block;background:var(--bg-section);color:var(--primary-dark);font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:20px;border:1px solid var(--border);margin-bottom:8px}
+.section-header h2{font-size:20px;font-weight:600;color:var(--primary-dark);line-height:1.3}
+.section-header p{font-size:13px;color:var(--text-muted);margin-top:4px}
+.card{background:#fff;border:1px solid var(--border-light);border-radius:var(--radius);padding:1rem 1.2rem;margin-bottom:0.85rem;box-shadow:var(--shadow)}
+.card-title{font-size:13px;font-weight:600;color:var(--primary-dark);margin-bottom:3px;display:block;line-height:1.4}
+.card-hint{font-size:11.5px;color:var(--text-hint);margin-bottom:10px;display:block}
+input[type=text],input[type=number],select,textarea{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;font-size:13px;font-family:inherit;background:#fff;color:var(--text-main);transition:border-color 0.2s,box-shadow 0.2s;-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary-mid);box-shadow:0 0 0 3px rgba(196,124,62,0.14)}
+textarea{min-height:75px;resize:vertical}
+.options{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;border:1.5px solid var(--border-light);background:var(--bg-card);font-size:13px;color:var(--text-main);transition:all 0.15s;user-select:none}
+.opt:hover{border-color:var(--primary-mid);background:var(--bg-pale)}
+.opt.selected{border-color:var(--primary-mid);background:var(--bg-pale);color:var(--primary-dark);font-weight:500}
+.opt-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);background:#fff;flex-shrink:0;margin-top:2px;transition:all 0.15s;display:flex;align-items:center;justify-content:center}
+.opt.selected .opt-dot{border-color:var(--primary);background:var(--primary)}
+.opt.selected .opt-dot::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+.opt-sq{width:16px;height:16px;border-radius:4px;border:2px solid var(--border);background:#fff;flex-shrink:0;margin-top:2px;transition:all 0.15s;display:flex;align-items:center;justify-content:center}
+.opt.selected .opt-sq{border-color:var(--primary);background:var(--primary)}
+.opt.selected .opt-sq::after{content:'✓';color:#fff;font-size:10px;font-weight:700;line-height:1}
+.otra-field{display:none;margin-top:8px;padding:8px 10px;background:var(--bg-pale);border-radius:7px;border:1px solid var(--border-light)}
+.otra-field.show{display:block}
+.otra-field input{margin-top:0}
+.exercise{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:1rem;overflow:hidden;box-shadow:var(--shadow)}
+.ex-header{background:var(--bg-section);padding:0.75rem 1.1rem;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:10px}
+.ex-num{width:26px;height:26px;border-radius:50%;background:var(--primary);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ex-title{font-size:13px;font-weight:600;color:var(--primary-dark)}
+.ex-body{padding:1rem 1.1rem}
+.ex-context{font-size:12.5px;color:var(--text-muted);line-height:1.65;background:var(--bg-card);border:1px solid var(--border-light);border-radius:8px;padding:0.75rem 1rem;margin-bottom:0.85rem}
+.ex-context strong{color:var(--primary-dark)}
+.ex-q{font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:0.7rem}
+.ex-opts button{display:block;width:100%;text-align:left;padding:8px 12px;margin-bottom:5px;border-radius:7px;border:1.5px solid var(--border-light);background:var(--bg-card);cursor:pointer;font-size:13px;font-family:inherit;color:var(--text-main);transition:all 0.15s}
+.ex-opts button:hover{border-color:var(--primary-mid);background:var(--bg-pale)}
+.ex-opts button.sel{border-color:var(--primary-mid);background:var(--bg-pale);font-weight:500;color:var(--primary-dark)}
+.ex-opts button.correct{border-color:var(--success-bd)!important;background:var(--success-bg)!important;color:var(--success-fg)!important;font-weight:600}
+.ex-opts button.wrong{border-color:var(--error-bd)!important;background:var(--error-bg)!important;color:var(--error-fg)!important}
+.ex-opts button.reveal{border-color:var(--success-bd);background:var(--success-bg);color:var(--success-fg);font-weight:600}
+.ex-feedback{display:none;margin-top:0.7rem;padding:0.7rem 1rem;border-radius:7px;font-size:12.5px;line-height:1.6;white-space:pre-wrap}
+.ex-feedback.show{display:block}
+.ex-feedback.ok{background:var(--success-bg);color:var(--success-fg);border:1px solid var(--success-bd)}
+.ex-feedback.ko{background:var(--error-bg);color:var(--error-fg);border:1px solid var(--error-bd)}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(196,124,62,0.10);padding:1px 5px;border-radius:4px;color:var(--primary-dark)}
+.nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.4rem;gap:0.8rem}
+.btn{padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all 0.15s;display:flex;align-items:center;gap:6px}
+.btn-prev{background:#fff;color:var(--primary);border:1.5px solid var(--border);box-shadow:var(--shadow)}
+.btn-prev:hover{background:var(--bg-pale);border-color:var(--primary-mid)}
+.btn-next{background:var(--primary);color:#fff;box-shadow:0 3px 10px rgba(160,80,20,0.28)}
+.btn-next:hover{background:var(--primary-dark)}
+.btn-submit{background:var(--primary-dark);color:#fff;box-shadow:0 3px 12px rgba(120,55,10,0.30)}
+.btn-submit:hover{background:#7a4018}
+
+/* RESULTADOS */
+.results-top{text-align:center;padding:1.5rem 0 1rem}
+.score-ring{width:110px;height:110px;border-radius:50%;border:6px solid var(--bg-section);background:#fff;margin:0 auto 1rem;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(160,80,20,0.12)}
+.score-pct{font-size:30px;font-weight:700;color:var(--primary);line-height:1}
+.score-pct-label{font-size:10px;color:var(--text-hint);margin-top:2px}
+.score-frac{font-size:12px;color:var(--text-muted);margin-top:1px}
+.score-msg{font-size:15px;font-weight:600;color:var(--primary-dark);margin-bottom:0.4rem}
+.score-sub{font-size:13px;color:var(--text-muted);max-width:480px;margin:0 auto}
+.answer-summary{background:#fff;border:1px solid var(--border-light);border-radius:var(--radius);margin-top:1.2rem;overflow:hidden;box-shadow:var(--shadow)}
+.answer-summary-header{background:var(--bg-section);padding:0.7rem 1.1rem;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--primary-mid)}
+.answer-row{display:grid;grid-template-columns:28px 1fr 22px;gap:8px;align-items:center;padding:9px 1.1rem;border-bottom:1px solid var(--border-light);font-size:13px}
+.answer-row:last-child{border-bottom:none}
+.answer-num{width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.answer-icon{text-align:center;font-size:15px}
+.feedback-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:1.3rem 1.4rem;margin-top:1.2rem;box-shadow:var(--shadow)}
+.feedback-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--primary-mid);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.feedback-label::before{content:'';width:20px;height:2px;background:var(--primary-mid)}
+.feedback-text{font-size:14px;line-height:1.85;color:var(--text-main);white-space:pre-wrap}
+.feedback-loading{display:flex;align-items:center;gap:10px;padding:1rem;color:var(--text-muted);font-size:13px}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-banner{background:var(--error-bg);border:1px solid var(--error-bd);border-radius:8px;padding:0.75rem 1rem;margin-bottom:0.8rem;font-size:13px;color:var(--error-fg);display:none}
+.error-banner.show{display:block}
+.req{color:var(--primary-mid);margin-left:2px}
+.page-footer{text-align:center;padding:1rem;font-size:11px;color:var(--text-hint);border-top:1px solid var(--border-light);margin-top:1.5rem}
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="logo">Universidad Tecnológica Nacional</div>
+  <h1>Diagnóstico Inicial — Algoritmos y Estructura de Datos</h1>
+  <p>1.er año · Ingeniería en Sistemas de Información · Ciclo lectivo 2026</p>
+</header>
+
+<div class="progress-wrap">
+  <div class="steps">
+    <div class="step active" id="step-0"></div>
+    <div class="step" id="step-1"></div>
+    <div class="step" id="step-2"></div>
+    <div class="step" id="step-3"></div>
+    <div class="step" id="step-4"></div>
+    <div class="step" id="step-5"></div>
+    <div class="step" id="step-6"></div>
+  </div>
+  <div class="step-labels">
+    <div class="step-lbl active" id="lbl-0">Datos</div>
+    <div class="step-lbl" id="lbl-1">Contexto</div>
+    <div class="step-lbl" id="lbl-2">Programación</div>
+    <div class="step-lbl" id="lbl-3">IA</div>
+    <div class="step-lbl" id="lbl-4">Carrera</div>
+    <div class="step-lbl" id="lbl-5">Ejercicios</div>
+    <div class="step-lbl" id="lbl-6">Resultados</div>
+  </div>
+</div>
+
+<main class="container">
+
+<!-- ─── SEC 0: DATOS ─── -->
+<section class="section active" id="sec-0">
+  <div class="section-header">
+    <div class="section-badge">Sección 1 de 6</div>
+    <h2>Datos personales</h2>
+    <p>Esta información es confidencial y solo la verá el equipo docente de la materia.</p>
+  </div>
+  <div class="card">
+    <span class="card-title">Nombre y apellido <span class="req">*</span></span>
+    <input type="text" id="nombre" placeholder="Ej: Ana García">
+  </div>
+  <div class="card">
+    <span class="card-title">DNI <span class="req">*</span></span>
+    <input type="text" id="dni" placeholder="Sin puntos — solo números" maxlength="10" inputmode="numeric">
+  </div>
+  <div class="card">
+    <span class="card-title">Comisión / turno <span class="req">*</span></span>
+    <input type="text" id="comision" placeholder="Ej: K2-noche, L1-mañana, M3-tarde...">
+  </div>
+  <div class="error-banner" id="err-0">Completá nombre, DNI y comisión para continuar.</div>
+  <div class="nav"><div></div><button class="btn btn-next" onclick="next()">Continuar →</button></div>
+</section>
+
+<!-- ─── SEC 1: CONTEXTO ─── -->
+<section class="section" id="sec-1">
+  <div class="section-header">
+    <div class="section-badge">Sección 2 de 6</div>
+    <h2>Contexto personal</h2>
+    <p>Nos ayuda a adaptar la dinámica de la materia a la realidad del grupo.</p>
+  </div>
+  <div class="card">
+    <span class="card-title">¿Viajás para llegar a la facultad? <span class="req">*</span></span>
+    <div class="options" id="r-viaje">
+      <div class="opt" onclick="selRadio('r-viaje',this)"><span class="opt-dot"></span>No, vivo en la misma ciudad</div>
+      <div class="opt" onclick="selRadio('r-viaje',this)"><span class="opt-dot"></span>Sí, viajo menos de 30 minutos</div>
+      <div class="opt" onclick="selRadio('r-viaje',this)"><span class="opt-dot"></span>Sí, viajo entre 30 min y 1 hora</div>
+      <div class="opt" onclick="selRadio('r-viaje',this)"><span class="opt-dot"></span>Sí, viajo más de 1 hora</div>
+    </div>
+  </div>
+  <div class="card">
+    <span class="card-title">¿Trabajás además de estudiar? <span class="req">*</span></span>
+    <div class="options" id="r-trabajo">
+      <div class="opt" onclick="selRadio('r-trabajo',this)"><span class="opt-dot"></span>No</div>
+      <div class="opt" onclick="selRadio('r-trabajo',this)"><span class="opt-dot"></span>Sí, part-time (hasta 20 hs semanales)</div>
+      <div class="opt" onclick="selRadio('r-trabajo',this)"><span class="opt-dot"></span>Sí, full-time (más de 20 hs semanales)</div>
+    </div>
+  </div>
+  <div class="card">
+    <span class="card-title">¿De qué tipo de escuela secundaria venís? <span class="req">*</span></span>
+    <div class="options" id="r-escuela">
+      <div class="opt" onclick="selRadio('r-escuela',this)"><span class="opt-dot"></span>Escuela con orientación en informática / programación</div>
+      <div class="opt" onclick="selRadio('r-escuela',this)"><span class="opt-dot"></span>Escuela técnica (otra orientación)</div>
+      <div class="opt" onclick="selRadio('r-escuela',this)"><span class="opt-dot"></span>Bachillerato / escuela general</div>
+      <div class="opt" onclick="selRadio('r-escuela',this)"><span class="opt-dot"></span>Otra</div>
+    </div>
+  </div>
+  <div class="error-banner" id="err-1">Por favor respondé todas las preguntas de esta sección.</div>
+  <div class="nav">
+    <button class="btn btn-prev" onclick="prev()">← Anterior</button>
+    <button class="btn btn-next" onclick="next()">Continuar →</button>
+  </div>
+</section>
+
+<!-- ─── SEC 2: PROGRAMACIÓN ─── -->
+<section class="section" id="sec-2">
+  <div class="section-header">
+    <div class="section-badge">Sección 3 de 6</div>
+    <h2>Conocimientos de programación</h2>
+    <p>Respondé con honestidad — no hay respuestas incorrectas. Nos ayuda a calibrar el ritmo de la materia.</p>
+  </div>
+  <div class="card">
+    <span class="card-title">¿Cómo describirías tu nivel actual en programación? <span class="req">*</span></span>
+    <div class="options" id="r-nivel">
+      <div class="opt" onclick="selRadio('r-nivel',this)"><span class="opt-dot"></span>Nunca programé — es la primera vez que me enfrento al tema</div>
+      <div class="opt" onclick="selRadio('r-nivel',this)"><span class="opt-dot"></span>Básico — hice algún taller o curso introductorio</div>
+      <div class="opt" onclick="selRadio('r-nivel',this)"><span class="opt-dot"></span>Intermedio — programé en la secundaria o por mi cuenta</div>
+      <div class="opt" onclick="selRadio('r-nivel',this)"><span class="opt-dot"></span>Avanzado — ya trabajo o tengo proyectos propios funcionando</div>
+    </div>
+  </div>
+  <div class="card">
+    <span class="card-title">¿Qué lenguajes conocés aunque sea un poco?</span>
+    <span class="card-hint">Podés marcar más de uno</span>
+    <div class="options" id="c-lenguajes">
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Ninguno por ahora</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Scratch / bloques visuales</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Python</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>JavaScript / HTML / CSS</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Java</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>C / C++</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Otro</div>
+    </div>
+  </div>
+  <div class="card">
+    <span class="card-title">¿Cuánto tiempo semanal le dedicabas a la programación antes de ingresar? <span class="req">*</span></span>
+    <div class="options" id="r-tiempo">
+      <div class="opt" onclick="selRadio('r-tiempo',this)"><span class="opt-dot"></span>Ninguno</div>
+      <div class="opt" onclick="selRadio('r-tiempo',this)"><span class="opt-dot"></span>Menos de 2 horas semanales</div>
+      <div class="opt" onclick="selRadio('r-tiempo',this)"><span class="opt-dot"></span>Entre 2 y 5 horas semanales</div>
+      <div class="opt" onclick="selRadio('r-tiempo',this)"><span class="opt-dot"></span>Más de 5 horas semanales</div>
+    </div>
+  </div>
+  <div class="error-banner" id="err-2">Por favor respondé las preguntas obligatorias de esta sección.</div>
+  <div class="nav">
+    <button class="btn btn-prev" onclick="prev()">← Anterior</button>
+    <button class="btn btn-next" onclick="next()">Continuar →</button>
+  </div>
+</section>
+
+<!-- ─── SEC 3: IA ─── -->
+<section class="section" id="sec-3">
+  <div class="section-header">
+    <div class="section-badge">Sección 4 de 6</div>
+    <h2>Inteligencia Artificial y tecnología</h2>
+    <p>Queremos conocer tu relación con las herramientas de IA actuales.</p>
+  </div>
+  <div class="card">
+    <span class="card-title">¿Con qué frecuencia usás herramientas de IA? <span class="req">*</span></span>
+    <div class="options" id="r-usa-ia">
+      <div class="opt" onclick="selRadio('r-usa-ia',this)"><span class="opt-dot"></span>Nunca las usé</div>
+      <div class="opt" onclick="selRadio('r-usa-ia',this)"><span class="opt-dot"></span>Las conozco de nombre pero no las usé de verdad</div>
+      <div class="opt" onclick="selRadio('r-usa-ia',this)"><span class="opt-dot"></span>Las uso de vez en cuando</div>
+      <div class="opt" onclick="selRadio('r-usa-ia',this)"><span class="opt-dot"></span>Las uso frecuentemente (casi todos los días)</div>
+    </div>
+  </div>
+  <div class="card">
+    <span class="card-title">¿Cuál/es herramientas de IA usás o conocés?</span>
+    <span class="card-hint">Podés marcar más de una</span>
+    <div class="options" id="c-herramientas">
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Ninguna</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>ChatGPT (OpenAI)</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Claude (Anthropic)</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Gemini (Google)</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Copilot (Microsoft)</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Perplexity</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>DeepSeek</div>
+      <div class="opt" onclick="selCheck(this,'otra-herramienta')"><span class="opt-sq"></span>Otra</div>
+    </div>
+    <div class="otra-field" id="otra-herramienta">
+      <input type="text" id="otra-herramienta-txt" placeholder="¿Cuál? Escribí el nombre de la herramienta">
+    </div>
+  </div>
+  <div class="card">
+    <span class="card-title">¿Desde qué dispositivo usás la IA principalmente?</span>
+    <div class="options" id="r-dispositivo">
+      <div class="opt" onclick="selRadio('r-dispositivo',this)"><span class="opt-dot"></span>No la uso</div>
+      <div class="opt" onclick="selRadio('r-dispositivo',this)"><span class="opt-dot"></span>Celular</div>
+      <div class="opt" onclick="selRadio('r-dispositivo',this)"><span class="opt-dot"></span>Computadora / notebook</div>
+      <div class="opt" onclick="selRadio('r-dispositivo',this)"><span class="opt-dot"></span>Indistintamente en varios dispositivos</div>
+    </div>
+  </div>
+  <div class="card">
+    <span class="card-title">¿Creés que la IA va a reemplazar a los programadores? <span class="req">*</span></span>
+    <div class="options" id="r-reemplazo">
+      <div class="opt" onclick="selRadio('r-reemplazo',this)"><span class="opt-dot"></span>Sí, totalmente — no tiene mucho sentido aprender a programar</div>
+      <div class="opt" onclick="selRadio('r-reemplazo',this)"><span class="opt-dot"></span>Parcialmente — reemplazará tareas repetitivas pero no todo</div>
+      <div class="opt" onclick="selRadio('r-reemplazo',this)"><span class="opt-dot"></span>No — la IA es una herramienta que amplifica lo que ya hacemos</div>
+      <div class="opt" onclick="selRadio('r-reemplazo',this)"><span class="opt-dot"></span>No sé, necesito más información para opinar</div>
+    </div>
+  </div>
+  <div class="card">
+    <span class="card-title">Si pudieras usar IA en esta materia, ¿para qué la usarías?</span>
+    <span class="card-hint">Podés marcar más de una</span>
+    <div class="options" id="c-uso-ia">
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Para que me explique conceptos que no entiendo</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Para que me dé los ejercicios ya resueltos</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Para revisar y corregir mis propias soluciones</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Para buscar información de la bibliografía</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Para practicar con más ejercicios similares a los de clase</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>No la usaría en la materia</div>
+      <div class="opt" onclick="selCheck(this,'otra-uso-ia')"><span class="opt-sq"></span>Otra</div>
+    </div>
+    <div class="otra-field" id="otra-uso-ia">
+      <input type="text" id="otra-uso-ia-txt" placeholder="¿Para qué la usarías?">
+    </div>
+  </div>
+  <div class="error-banner" id="err-3">Por favor respondé las preguntas obligatorias de esta sección.</div>
+  <div class="nav">
+    <button class="btn btn-prev" onclick="prev()">← Anterior</button>
+    <button class="btn btn-next" onclick="next()">Continuar →</button>
+  </div>
+</section>
+
+<!-- ─── SEC 4: CARRERA ─── -->
+<section class="section" id="sec-4">
+  <div class="section-header">
+    <div class="section-badge">Sección 5 de 6</div>
+    <h2>Elección de carrera y expectativas</h2>
+    <p>Tu motivación forma parte del diagnóstico. Respondé con libertad.</p>
+  </div>
+  <div class="card">
+    <span class="card-title">¿Por qué elegiste Ingeniería en Sistemas de Información? <span class="req">*</span></span>
+    <span class="card-hint">Podés marcar más de una</span>
+    <div class="options" id="c-motivo">
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Me apasiona la tecnología y quiero dedicarme a eso</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Por las salidas laborales y el mercado de trabajo</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Me lo recomendaron (familia, amigos, orientador)</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Es la carrera tecnológica más accesible cerca de mi casa</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Quiero trabajar con IA, videojuegos, ciberseguridad o similares</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Me atrae el enfoque práctico de UTN</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Todavía no estoy del todo seguro/a de la elección</div>
+      <div class="opt" onclick="selCheck(this,'otra-motivo')"><span class="opt-sq"></span>Otra razón</div>
+    </div>
+    <div class="otra-field" id="otra-motivo">
+      <input type="text" id="otra-motivo-txt" placeholder="¿Cuál es tu motivo?">
+    </div>
+  </div>
+  <div class="card">
+    <span class="card-title">¿Qué esperás de esta materia (Algoritmos)? <span class="req">*</span></span>
+    <span class="card-hint">Podés marcar más de una</span>
+    <div class="options" id="c-expectativas">
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Aprender a programar desde cero</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Fortalecer mi lógica y razonamiento</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Entender cómo funciona el software por dentro</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Aprobar y poder avanzar en la carrera</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Que sea práctica, con problemas reales</div>
+      <div class="opt" onclick="selCheck(this)"><span class="opt-sq"></span>Prepararme bien para las materias siguientes</div>
+      <div class="opt" onclick="selCheck(this,'otra-expectativa')"><span class="opt-sq"></span>Otra expectativa</div>
+    </div>
+    <div class="otra-field" id="otra-expectativa">
+      <input type="text" id="otra-expectativa-txt" placeholder="¿Qué otra cosa esperás?">
+    </div>
+  </div>
+  <div class="card">
+    <span class="card-title">¿Qué te preocupa o te genera más dudas sobre la materia?</span>
+    <span class="card-hint">Escribí libremente — esto nos ayuda para adaptar las clases</span>
+    <textarea id="preocupaciones" placeholder="Ej: Me da miedo no poder seguir el ritmo, nunca programé, no sé qué es un algoritmo..."></textarea>
+  </div>
+  <div class="error-banner" id="err-4">Por favor respondé las preguntas obligatorias.</div>
+  <div class="nav">
+    <button class="btn btn-prev" onclick="prev()">← Anterior</button>
+    <button class="btn btn-next" onclick="next()">Continuar →</button>
+  </div>
+</section>
+
+<!-- ─── SEC 5: EJERCICIOS ─── -->
+<section class="section" id="sec-5">
+  <div class="section-header">
+    <div class="section-badge">Sección 6 de 6</div>
+    <h2>Ejercicios de lógica</h2>
+    <p>Leé cada situación con atención y elegí la respuesta. No busques en internet — queremos ver <strong>tu</strong> razonamiento actual.</p>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-header"><div class="ex-num">1</div><div class="ex-title">La robot Luna</div></div>
+    <div class="ex-body">
+      <div class="ex-context">
+        Luna es un robot que empieza en la posición <strong>1</strong> de una línea numérica.<br>
+        Recibe comandos en este orden: <strong>SUMA → DOBLE → RESTA → SUMA</strong><br><br>
+        Las instrucciones son:<br>
+        · <span class="mono">SUMA</span>: avanza 3 posiciones &nbsp;·&nbsp;
+        <span class="mono">DOBLE</span>: duplica su posición actual &nbsp;·&nbsp;
+        <span class="mono">RESTA</span>: retrocede 2 posiciones
+      </div>
+      <div class="ex-q">¿En qué posición queda Luna después de ejecutar los 4 comandos?</div>
+      <div class="ex-opts" id="opts-q1">
+        <button onclick="selExOpt('q1',this,'A')">A) &nbsp; 7</button>
+        <button onclick="selExOpt('q1',this,'B')">B) &nbsp; 9</button>
+        <button onclick="selExOpt('q1',this,'C')">C) &nbsp; 10</button>
+        <button onclick="selExOpt('q1',this,'D')">D) &nbsp; 12</button>
+      </div>
+      <div class="ex-feedback" id="fb-q1"></div>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-header"><div class="ex-num">2</div><div class="ex-title">El semáforo inteligente</div></div>
+    <div class="ex-body">
+      <div class="ex-context">
+        Un semáforo sigue reglas estrictas:<br>
+        · Si está en <strong>VERDE</strong> y alguien presiona el botón peatonal → pasa a <strong>AMARILLO</strong><br>
+        · Si está en <strong>AMARILLO</strong> → siempre pasa a <strong>ROJO</strong> (sin excepciones)<br>
+        · Si está en <strong>ROJO</strong> y pasaron 30 segundos → pasa a <strong>VERDE</strong><br>
+        · Si está en <strong>ROJO</strong> y no pasaron 30 segundos → permanece en <strong>ROJO</strong><br><br>
+        Situación: estado actual = <strong>VERDE</strong>. Un peatón presiona el botón. Luego ocurren <strong>2 cambios de estado automáticos</strong>.
+      </div>
+      <div class="ex-q">¿En qué estado queda el semáforo?</div>
+      <div class="ex-opts" id="opts-q2">
+        <button onclick="selExOpt('q2',this,'A')">A) &nbsp; Verde</button>
+        <button onclick="selExOpt('q2',this,'B')">B) &nbsp; Amarillo</button>
+        <button onclick="selExOpt('q2',this,'C')">C) &nbsp; Rojo</button>
+        <button onclick="selExOpt('q2',this,'D')">D) &nbsp; Apagado</button>
+      </div>
+      <div class="ex-feedback" id="fb-q2"></div>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-header"><div class="ex-num">3</div><div class="ex-title">Los paquetes de Mateo</div></div>
+    <div class="ex-body">
+      <div class="ex-context">
+        Mateo tiene <strong>5 cajas</strong> que pesan: <strong>4 kg · 3 kg · 6 kg · 5 kg · 2 kg</strong> (total: 20 kg).<br>
+        Tiene <strong>3 bolsas</strong>, cada una soporta hasta <strong>8 kg</strong>.<br>
+        En cada bolsa puede poner <strong>cualquier cantidad de cajas</strong>, siempre que el peso total no supere 8 kg.
+      </div>
+      <div class="ex-q">¿Puede Mateo distribuir todas las cajas en las 3 bolsas sin exceder el límite?</div>
+      <div class="ex-opts" id="opts-q3">
+        <button onclick="selExOpt('q3',this,'A')">A) &nbsp; No, es imposible — 20 kg superan la capacidad total de 24 kg</button>
+        <button onclick="selExOpt('q3',this,'B')">B) &nbsp; Sí — y en una de las bolsas irá solo una caja</button>
+        <button onclick="selExOpt('q3',this,'C')">C) &nbsp; Sí — pero cada bolsa debe llevar exactamente 2 cajas o más</button>
+        <button onclick="selExOpt('q3',this,'D')">D) &nbsp; No se puede saber sin conocer las medidas físicas de las cajas</button>
+      </div>
+      <div class="ex-feedback" id="fb-q3"></div>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-header"><div class="ex-num">4</div><div class="ex-title">La sucesión</div></div>
+    <div class="ex-body">
+      <div class="ex-context">
+        Valentina encontró esta secuencia de números:<br><br>
+        <strong style="font-size:18px;letter-spacing:4px;font-family:'JetBrains Mono',monospace">2 · 6 · 12 · 20 · 30 · ?</strong><br><br>
+        Pista: prestá atención a la <em>diferencia</em> entre cada par de números consecutivos.
+      </div>
+      <div class="ex-q">¿Cuál es el próximo número?</div>
+      <div class="ex-opts" id="opts-q4">
+        <button onclick="selExOpt('q4',this,'A')">A) &nbsp; 36</button>
+        <button onclick="selExOpt('q4',this,'B')">B) &nbsp; 40</button>
+        <button onclick="selExOpt('q4',this,'C')">C) &nbsp; 42</button>
+        <button onclick="selExOpt('q4',this,'D')">D) &nbsp; 44</button>
+      </div>
+      <div class="ex-feedback" id="fb-q4"></div>
+    </div>
+  </div>
+
+  <div class="error-banner" id="err-5">Respondé los 4 ejercicios antes de enviar.</div>
+  <div class="nav">
+    <button class="btn btn-prev" onclick="prev()">← Anterior</button>
+    <button class="btn btn-submit" onclick="submitForm()">Enviar y ver resultados →</button>
+  </div>
+</section>
+
+<!-- ─── SEC 6: RESULTADOS ─── -->
+<section class="section" id="sec-6">
+  <div class="results-top">
+    <div class="score-ring">
+      <span class="score-pct" id="score-pct">0%</span>
+      <span class="score-pct-label">lógica</span>
+      <span class="score-frac" id="score-frac">0/4</span>
+    </div>
+    <div class="score-msg" id="score-msg"></div>
+    <div class="score-sub" id="score-sub"></div>
+  </div>
+
+  <div class="answer-summary">
+    <div class="answer-summary-header">Tus respuestas</div>
+    <div class="answer-row"><div class="answer-num">1</div><div id="ar-q1-text"></div><div class="answer-icon" id="ar-q1-icon"></div></div>
+    <div class="answer-row"><div class="answer-num">2</div><div id="ar-q2-text"></div><div class="answer-icon" id="ar-q2-icon"></div></div>
+    <div class="answer-row"><div class="answer-num">3</div><div id="ar-q3-text"></div><div class="answer-icon" id="ar-q3-icon"></div></div>
+    <div class="answer-row"><div class="answer-num">4</div><div id="ar-q4-text"></div><div class="answer-icon" id="ar-q4-icon"></div></div>
+  </div>
+
+  <div class="feedback-card">
+    <div class="feedback-label">Reflexión del equipo docente</div>
+    <div id="feedback-content">
+      <div class="feedback-loading" id="fb-loading">
+        <div class="spinner"></div>
+        <span>Preparando tu retroalimentación personalizada...</span>
+      </div>
+      <div class="feedback-text" id="fb-text" style="display:none"></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="page-footer">
+  UTN · Algoritmos y Estructura de Datos · 1.er año · Plan 2022 Ord. 1877 · Ciclo 2026
+</footer>
+
+<script>
+const CONFIG = {
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyyTNT8cJuH6J0a4rXVACuYbqaQ0rFKPzjA-1LzmxTXrXp1xbb-xYk-hiVc4jhry7qB7g/exec'
+};
+
+const CORRECT = { q1:'B', q2:'C', q3:'B', q4:'C' };
+
+const OPT_LABELS = {
+  q1:{ A:'7', B:'9', C:'10', D:'12' },
+  q2:{ A:'Verde', B:'Amarillo', C:'Rojo', D:'Apagado' },
+  q3:{ A:'No — imposible', B:'Sí — una bolsa lleva solo una caja', C:'Sí — mínimo 2 cajas por bolsa', D:'No se puede saber' },
+  q4:{ A:'36', B:'40', C:'42', D:'44' }
+};
+
+const EXPLAIN = {
+  q1:`Respuesta correcta: B) 9\n\nPaso a paso:\n  Inicio: posición 1\n  SUMA  → 1 + 3 = 4\n  DOBLE → 4 × 2 = 8\n  RESTA → 8 − 2 = 6\n  SUMA  → 6 + 3 = 9`,
+  q2:`Respuesta correcta: C) Rojo\n\nCadena de estados:\n  VERDE + botón → AMARILLO  (cambio 1)\n  AMARILLO      → ROJO       (cambio 2)\n  Resultado: ROJO`,
+  q3:`Respuesta correcta: B) Sí — y en una bolsa va solo una caja\n\nDistribución válida:\n  Bolsa 1: 6 + 2 = 8 kg  ✓\n  Bolsa 2: 5 + 3 = 8 kg  ✓\n  Bolsa 3: 4 kg (1 caja) ✓\n  Capacidad total 3×8 = 24 kg > 20 kg → hay solución`,
+  q4:`Respuesta correcta: C) 42\n\nDiferencias entre términos consecutivos:\n  6−2=4 · 12−6=6 · 20−12=8 · 30−20=10\n  La diferencia crece de 2 en 2 → próxima diferencia = 12\n  30 + 12 = 42`
+};
+
+const SCORE_DATA = [
+  [0,   '¡Arrancamos desde cero!',       'No te preocupes — la materia está diseñada exactamente para este punto de partida.'],
+  [25,  '¡Primer paso dado!',             'Tenés intuición para desarrollar. Con práctica constante vas a crecer mucho.'],
+  [50,  '¡Buen punto de partida!',        'Aciertos y aprendizajes. La práctica en clase va a potenciar tu lógica rápidamente.'],
+  [75,  '¡Muy buen nivel inicial!',       'Base lógica sólida. Vas a poder profundizar y avanzar rápido este año.'],
+  [100, '¡Lógica impecable!',             'Dominás los fundamentos. El desafío será ir a mayor profundidad y calidad de soluciones.']
+];
+
+let cur = 0;
+
+function goTo(n) {
+  document.getElementById('sec-' + cur).classList.remove('active');
+  document.getElementById('step-' + cur).classList.remove('active');
+  document.getElementById('lbl-' + cur).classList.remove('active');
+  if (n > cur) {
+    document.getElementById('step-' + cur).classList.add('done');
+    document.getElementById('lbl-' + cur).classList.add('done');
+  } else {
+    document.getElementById('step-' + cur).classList.remove('done');
+    document.getElementById('lbl-' + cur).classList.remove('done');
+  }
+  cur = n;
+  document.getElementById('sec-' + cur).classList.add('active');
+  document.getElementById('step-' + cur).classList.add('active');
+  document.getElementById('lbl-' + cur).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function next() { if (!validate(cur)) return; hideErr(cur); goTo(cur + 1); }
+function prev() { hideErr(cur); goTo(cur - 1); }
+
+function validate(sec) {
+  if (sec === 0) {
+    if (!v('nombre') || !v('dni') || !v('comision')) { showErr(0); return false; }
+  }
+  if (sec === 1) {
+    if (!getRadio('r-viaje') || !getRadio('r-trabajo') || !getRadio('r-escuela')) { showErr(1); return false; }
+  }
+  if (sec === 2) {
+    if (!getRadio('r-nivel') || !getRadio('r-tiempo')) { showErr(2); return false; }
+  }
+  if (sec === 3) {
+    if (!getRadio('r-usa-ia') || !getRadio('r-reemplazo')) { showErr(3); return false; }
+  }
+  if (sec === 4) {
+    if (!getCheck('c-motivo') || !getCheck('c-expectativas')) { showErr(4); return false; }
+  }
+  if (sec === 5) {
+    if (!['q1','q2','q3','q4'].every(q => answers[q] !== null)) { showErr(5); return false; }
+  }
+  return true;
+}
+
+function v(id) { const e = document.getElementById(id); return e && e.value.trim() !== ''; }
+function showErr(n) { document.getElementById('err-' + n).classList.add('show'); }
+function hideErr(n) { const e = document.getElementById('err-' + n); if (e) e.classList.remove('show'); }
+
+function selRadio(gid, el) {
+  document.querySelectorAll('#' + gid + ' .opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function selCheck(el, otraId) {
+  el.classList.toggle('selected');
+  if (otraId) {
+    const f = document.getElementById(otraId);
+    if (f) f.classList.toggle('show', el.classList.contains('selected'));
+  }
+}
+
+function getRadio(gid) {
+  const s = document.querySelector('#' + gid + ' .opt.selected');
+  return s ? s.textContent.trim() : null;
+}
+
+function getCheck(gid) {
+  const ss = document.querySelectorAll('#' + gid + ' .opt.selected');
+  return ss.length > 0 ? Array.from(ss).map(s => s.textContent.trim()) : null;
+}
+
+function getCheckArr(gid) {
+  return Array.from(document.querySelectorAll('#' + gid + ' .opt.selected')).map(s => s.textContent.trim());
+}
+
+function getOtra(id) {
+  const e = document.getElementById(id);
+  return e ? e.value.trim() : '';
+}
+
+const answers = { q1:null, q2:null, q3:null, q4:null };
+
+function selExOpt(q, btn, val) {
+  document.querySelectorAll('#opts-' + q + ' button').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  answers[q] = val;
+  hideErr(5);
+}
+
+function revealExercise(q) {
+  const correct = CORRECT[q], sel = answers[q];
+  document.querySelectorAll('#opts-' + q + ' button').forEach(btn => {
+    const val = btn.getAttribute('onclick').match(/,'([A-D])'\)/)[1];
+    btn.disabled = true;
+    if (val === correct) btn.classList.add('reveal');
+    if (val === sel && sel !== correct) btn.classList.add('wrong');
+    if (val === sel && sel === correct) { btn.classList.remove('reveal'); btn.classList.add('correct'); }
+  });
+  const fb = document.getElementById('fb-' + q);
+  fb.textContent = EXPLAIN[q];
+  fb.classList.add('show', sel === correct ? 'ok' : 'ko');
+}
+
+function buildAnswerSummary() {
+  ['q1','q2','q3','q4'].forEach((q, i) => {
+    const sel = answers[q], ok = sel === CORRECT[q];
+    const label = sel ? OPT_LABELS[q][sel] : '— sin respuesta —';
+    const txt = ok
+      ? 'Ejercicio ' + (i+1) + ': ' + label
+      : 'Ejercicio ' + (i+1) + ': ' + label + '  →  correcta: ' + OPT_LABELS[q][CORRECT[q]];
+    document.getElementById('ar-' + q + '-text').textContent = txt;
+    document.getElementById('ar-' + q + '-text').style.color = ok ? 'var(--success-fg)' : 'var(--error-fg)';
+    document.getElementById('ar-' + q + '-icon').textContent = ok ? '✓' : '✗';
+    document.getElementById('ar-' + q + '-icon').style.color = ok ? 'var(--success-fg)' : 'var(--error-fg)';
+  });
+}
+
+function collectData() {
+  const score = ['q1','q2','q3','q4'].filter(q => answers[q] === CORRECT[q]).length;
+
+  let herramientas = getCheckArr('c-herramientas');
+  const otraH = getOtra('otra-herramienta-txt');
+  if (otraH) herramientas = herramientas.filter(h => h !== 'Otra').concat(otraH);
+
+  let usoIA = getCheckArr('c-uso-ia');
+  const otraU = getOtra('otra-uso-ia-txt');
+  if (otraU) usoIA = usoIA.filter(u => u !== 'Otra').concat(otraU);
+
+  let motivos = getCheckArr('c-motivo');
+  const otraM = getOtra('otra-motivo-txt');
+  if (otraM) motivos = motivos.filter(m => m !== 'Otra razón').concat(otraM);
+
+  let expectativas = getCheckArr('c-expectativas');
+  const otraE = getOtra('otra-expectativa-txt');
+  if (otraE) expectativas = expectativas.filter(e => e !== 'Otra expectativa').concat(otraE);
+
+  return {
+    timestamp: new Date().toLocaleString('es-AR'),
+    nombre: document.getElementById('nombre').value.trim(),
+    dni: document.getElementById('dni').value.trim(),
+    comision: document.getElementById('comision').value.trim(),
+    viaje: getRadio('r-viaje'),
+    trabajo: getRadio('r-trabajo'),
+    escuela: getRadio('r-escuela'),
+    nivelProg: getRadio('r-nivel'),
+    lenguajes: getCheckArr('c-lenguajes'),
+    tiempoProg: getRadio('r-tiempo'),
+    usaIA: getRadio('r-usa-ia'),
+    herramientasIA: herramientas,
+    dispositivoIA: getRadio('r-dispositivo'),
+    reemplazoIA: getRadio('r-reemplazo'),
+    usoIAMateria: usoIA,
+    motivoCarrera: motivos,
+    expectativas: expectativas,
+    preocupaciones: document.getElementById('preocupaciones').value.trim(),
+    scoreLogica: score,
+    respQ1: answers.q1,
+    respQ2: answers.q2,
+    respQ3: answers.q3,
+    respQ4: answers.q4
+  };
+}
+
+async function submitForm() {
+  if (!validate(5)) return;
+
+  ['q1','q2','q3','q4'].forEach(revealExercise);
+
+  const score = ['q1','q2','q3','q4'].filter(q => answers[q] === CORRECT[q]).length;
+  const [pct, msg, sub] = SCORE_DATA[score];
+
+  document.getElementById('step-5').classList.add('done');
+  document.getElementById('lbl-5').classList.add('done');
+  goTo(6);
+
+  document.getElementById('score-pct').textContent = pct + '%';
+  document.getElementById('score-frac').textContent = score + ' / 4';
+  document.getElementById('score-msg').textContent = msg;
+  document.getElementById('score-sub').textContent = sub;
+
+  buildAnswerSummary();
+
+  const data = collectData();
+
+  document.getElementById('fb-loading').style.display = 'flex';
+  document.getElementById('fb-text').style.display = 'none';
+
+  try {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(data),
+      redirect: 'follow'
+    });
+    const json = await res.json();
+    if (json.feedback) {
+      document.getElementById('fb-loading').style.display = 'none';
+      document.getElementById('fb-text').textContent = json.feedback;
+      document.getElementById('fb-text').style.display = 'block';
+    } else {
+      showFallback(score, data);
+    }
+  } catch(err) {
+    console.warn('Apps Script no disponible:', err);
+    showFallback(score, data);
+  }
+}
+
+function showFallback(score, data) {
+  document.getElementById('fb-loading').style.display = 'none';
+  const nombre = (data.nombre || '').split(' ')[0] || 'Estudiante';
+  const pct = SCORE_DATA[score][0];
+  let txt = '';
+
+  if (score <= 1) {
+    txt = `${nombre}, obtuviste un ${pct}% en los ejercicios de lógica (${score}/4). Ese resultado nos dice que estás empezando desde cero — y está perfectamente bien: es exactamente para lo que está diseñada esta materia. No importa de dónde partís hoy, sino cómo construís tu razonamiento a lo largo del año.
+
+Algoritmos no es una materia donde se memorizan fórmulas ni se copia código: se aprende haciendo, equivocándose y volviendo a intentarlo. La participación en clase no es un plus — es el motor. Cada vez que te animás a razonar en voz alta, a preguntar aunque parezca básico, o a defender una solución frente a tus compañeros, estás desarrollando exactamente la habilidad que la materia busca. Venir a clase y participar activamente, incluso en los momentos donde todo parece difícil, es lo que construye la lógica de un programador.
+
+Sobre la IA: este año vas a empezar a entender por qué quien tiene fundamentos sólidos saca mucho más provecho de estas herramientas. La IA puede generar código, pero no puede razonar por vos. Ese razonamiento es el que construís acá, clase a clase. Bienvenido/a al comienzo del camino.`;
+  } else if (score <= 2) {
+    txt = `${nombre}, obtuviste un ${pct}% en los ejercicios de lógica (${score}/4). Eso muestra que tenés intuición — en algunos casos llegaste a la solución, en otros quizás te apuró el tiempo o la lectura del enunciado. Eso es uno de los primeros aprendizajes de la materia: leer despacio, interpretar bien el problema antes de ponerse a resolverlo.
+
+Algoritmos es una materia de práctica y participación activa. No alcanza con ver las soluciones en clase o leer el libro: hay que resolverlo uno mismo, equivocarse, entender por qué falló y volver a intentarlo. Ese ciclo de iteración — intentar, fallar, entender, mejorar — es exactamente cómo funciona el desarrollo real de software. Los momentos de clase donde se resuelven problemas en vivo son los más valiosos: aprovechalos, aunque no estés seguro/a de la respuesta.
+
+Si ya usás IA o pensás usarla, hacelo de forma estratégica: primero intentalo vos, luego pedile que revise tu solución o te explique por qué un enfoque es mejor. El desarrollador que sabe guiar a la IA con precisión es quien tiene fundamentos claros — y eso es lo que construís este año.`;
+  } else {
+    txt = `${nombre}, obtuviste un ${pct}% en los ejercicios de lógica (${score}/4). Eso muestra una base sólida: seguís instrucciones en orden, aplicás condiciones, distribuís problemas con restricciones y reconocés patrones. Es un capital enorme para arrancar el año.
+
+Eso no significa que sea fácil — significa que podés ir más profundo. El desafío para quien ya tiene base está en hacer las cosas bien, no solo que funcionen: código legible, soluciones eficientes, capacidad de explicarle tu razonamiento a un compañero. La participación activa, el trabajo en equipo y animarte a debatir soluciones alternativas en clase son claves. En el mercado laboral, el desarrollo es fundamentalmente una actividad grupal.
+
+Sobre la IA: si ya la usás, sabés que genera código. El valor diferencial está en poder evaluar ese código críticamente — detectar qué va a fallar en ciertos casos, qué tiene vulnerabilidades, qué es ineficiente. Como dice la Guía de Programadores Junior 2026: "un desarrollador con fundamentos sólidos + dominio de IA es mucho más productivo que uno que solo tiene uno de los dos". Este año construís esos fundamentos. Bienvenido/a.`;
+  }
+
+  document.getElementById('fb-text').textContent = txt;
+  document.getElementById('fb-text').style.display = 'block';
+}
+</script>
+
+</body>
+</html>
