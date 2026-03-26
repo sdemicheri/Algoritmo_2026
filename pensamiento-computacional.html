@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  LOS 4 PILARES DEL PENSAMIENTO COMPUTACIONAL                    ║
+  ║  Herramienta de práctica interactiva para estudiantes           ║
+  ║                                                                  ║
+  ║  Pilares incluidos:                                              ║
+  ║    1. Descomposición     — escritura libre + evaluación         ║
+  ║    2. Reconocimiento de Patrones — describe + selecciona        ║
+  ║    3. Abstracción        — escritura libre + evaluación         ║
+  ║    4. Algoritmos         — drag & drop para ordenar pasos       ║
+  ║                                                                  ║
+  ║  Solución modelo: aparece al 3er intento fallido (pilares 1,2,3)║
+  ║  Para GitHub Pages: subir como index.html                       ║
+  ╚══════════════════════════════════════════════════════════════════╝
+-->
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>4 Pilares del Pensamiento Computacional</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════════════════
+       VARIABLES GLOBALES
+       ═══════════════════════════════════════════════════ */
+    :root {
+      --bg:       #0c0e14;
+      --surface:  #13151e;
+      --card:     #191c28;
+      --card2:    #1e2230;
+      --border:   #252840;
+      --border2:  #2e324a;
+
+      --text:     #dde1f0;
+      --muted:    #6b7099;
+      --soft:     #9097bb;
+
+      /* Colores por pilar */
+      --p1:       #f97316;   /* Descomposición  — naranja */
+      --p1-bg:    #1f1108;
+      --p1-bdr:   #4a2a08;
+
+      --p2:       #a78bfa;   /* Patrones        — violeta */
+      --p2-bg:    #140f24;
+      --p2-bdr:   #3a2a5c;
+
+      --p3:       #34d399;   /* Abstracción     — verde   */
+      --p3-bg:    #0a1f18;
+      --p3-bdr:   #1a5c3f;
+
+      --p4:       #38bdf8;   /* Algoritmos      — celeste */
+      --p4-bg:    #081620;
+      --p4-bdr:   #0e3a52;
+
+      --green:    #34d399;
+      --yellow:   #fbbf24;
+      --red:      #f87171;
+
+      --radius:   14px;
+      --radius-sm:9px;
+      --shadow:   0 8px 32px rgba(0,0,0,.5);
+
+      --font: 'Outfit', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+
+      /* Color activo del pilar actual (se sobreescribe con JS) */
+      --active: var(--p1);
+      --active-bg: var(--p1-bg);
+      --active-bdr: var(--p1-bdr);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.6;
+      padding-bottom: 80px;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════════════════ */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 24px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% -10%, #ffffff08, transparent);
+      pointer-events: none;
+    }
+    .header-top { margin-bottom: 24px; }
+    .header-badge {
+      display: inline-block;
+      background: #ffffff10;
+      color: var(--soft);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      margin-bottom: 12px;
+    }
+    header h1 {
+      font-size: clamp(20px, 4vw, 30px);
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -.02em;
+    }
+    header p {
+      color: var(--muted);
+      font-size: 13.5px;
+      margin-top: 6px;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       NAVEGACIÓN DE PILARES (tabs)
+       ═══════════════════════════════════════════════════ */
+    .pilares-nav {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      margin-top: 20px;
+      position: relative;
+    }
+    .pilar-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 14px 20px 16px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      position: relative;
+      transition: color .2s;
+      min-width: 0;
+      flex: 1;
+      max-width: 180px;
+    }
+    .pilar-tab::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: transparent;
+      transition: background .2s;
+    }
+    .pilar-tab .tab-icon { font-size: 20px; }
+    .pilar-tab .tab-label { display: none; }
+    @media (min-width: 500px) { .pilar-tab .tab-label { display: block; } }
+
+    .pilar-tab[data-pilar="1"]:hover, .pilar-tab[data-pilar="1"].active { color: var(--p1); }
+    .pilar-tab[data-pilar="2"]:hover, .pilar-tab[data-pilar="2"].active { color: var(--p2); }
+    .pilar-tab[data-pilar="3"]:hover, .pilar-tab[data-pilar="3"].active { color: var(--p3); }
+    .pilar-tab[data-pilar="4"]:hover, .pilar-tab[data-pilar="4"].active { color: var(--p4); }
+
+    .pilar-tab[data-pilar="1"].active::after { background: var(--p1); }
+    .pilar-tab[data-pilar="2"].active::after { background: var(--p2); }
+    .pilar-tab[data-pilar="3"].active::after { background: var(--p3); }
+    .pilar-tab[data-pilar="4"].active::after { background: var(--p4); }
+
+    /* Badge de progreso en cada tab */
+    .tab-badge {
+      font-size: 9px;
+      padding: 1px 6px;
+      border-radius: 8px;
+      background: #ffffff15;
+      font-weight: 700;
+      letter-spacing: .05em;
+      display: none;
+    }
+    .tab-badge.visible { display: inline-block; }
+
+    /* ═══════════════════════════════════════════════════
+       MAIN
+       ═══════════════════════════════════════════════════ */
+    main {
+      max-width: 800px;
+      margin: 28px auto 0;
+      padding: 0 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       INTRO CARD DEL PILAR
+       ═══════════════════════════════════════════════════ */
+    .pilar-intro {
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      border: 1px solid;
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+    }
+    .pilar-intro-icon { font-size: 32px; flex-shrink: 0; }
+    .pilar-intro h2 { font-size: 18px; font-weight: 700; margin-bottom: 5px; }
+    .pilar-intro p { font-size: 13.5px; color: var(--soft); line-height: 1.6; }
+    .pilar-intro .pilar-tip {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 500;
+    }
+
+    /* colores por pilar */
+    .pi-1 { background: var(--p1-bg); border-color: var(--p1-bdr); }
+    .pi-1 h2 { color: var(--p1); }
+    .pi-1 .pilar-tip { background: #f9731615; color: var(--p1); }
+
+    .pi-2 { background: var(--p2-bg); border-color: var(--p2-bdr); }
+    .pi-2 h2 { color: var(--p2); }
+    .pi-2 .pilar-tip { background: #a78bfa15; color: var(--p2); }
+
+    .pi-3 { background: var(--p3-bg); border-color: var(--p3-bdr); }
+    .pi-3 h2 { color: var(--p3); }
+    .pi-3 .pilar-tip { background: #34d39915; color: var(--p3); }
+
+    .pi-4 { background: var(--p4-bg); border-color: var(--p4-bdr); }
+    .pi-4 h2 { color: var(--p4); }
+    .pi-4 .pilar-tip { background: #38bdf815; color: var(--p4); }
+
+    /* ═══════════════════════════════════════════════════
+       TARJETAS GENÉRICAS
+       ═══════════════════════════════════════════════════ */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cdot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .cdot-1 { background: var(--p1); }
+    .cdot-2 { background: var(--p2); }
+    .cdot-3 { background: var(--p3); }
+    .cdot-4 { background: var(--p4); }
+
+    #problema-texto { font-size: 15px; line-height: 1.7; font-weight: 300; }
+    #problema-texto strong { color: #fff; font-weight: 600; }
+
+    /* ═══════════════════════════════════════════════════
+       BOTONES
+       ═══════════════════════════════════════════════════ */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      border: none; cursor: pointer;
+      font-family: var(--font); font-size: 14px; font-weight: 600;
+      transition: all .18s; letter-spacing: .01em;
+    }
+    .btn-p1 { background: var(--p1); color: #fff; }
+    .btn-p1:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .btn-p2 { background: var(--p2); color: #fff; }
+    .btn-p2:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .btn-p3 { background: var(--p3); color: #0a1f18; }
+    .btn-p3:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .btn-p4 { background: var(--p4); color: #081620; }
+    .btn-p4:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .btn-sec {
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-sec:hover { border-color: var(--soft); color: var(--text); }
+    .btn-ghost {
+      background: transparent; color: var(--muted);
+      border: none; font-size: 13px; padding: 9px 10px;
+    }
+    .btn-ghost:hover { color: var(--text); }
+    .actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+
+    /* ═══════════════════════════════════════════════════
+       INPUTS DE TEXTO (pilar 1 y 3)
+       ═══════════════════════════════════════════════════ */
+    .subproblema-row {
+      display: flex; gap: 8px; align-items: center;
+      animation: slideIn .2s ease;
+    }
+    @keyframes slideIn {
+      from { opacity:0; transform: translateY(-5px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    .row-num {
+      font-family: var(--mono); font-size: 11px;
+      color: var(--muted); width: 20px; flex-shrink: 0; text-align: right;
+    }
+    .row-input {
+      flex: 1; background: var(--surface);
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      padding: 10px 14px; color: var(--text);
+      font-family: var(--font); font-size: 14px; outline: none;
+      transition: border-color .2s;
+    }
+    .row-input::placeholder { color: #353a55; }
+    .row-input:focus { border-color: var(--active); }
+    .btn-rm {
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      border-radius: 6px; width: 30px; height: 30px; cursor: pointer;
+      font-size: 16px; display: flex; align-items: center; justify-content: center;
+      transition: all .15s; flex-shrink: 0;
+    }
+    .btn-rm:hover { border-color: var(--red); color: var(--red); }
+
+    /* ═══════════════════════════════════════════════════
+       RESULTADOS DE EVALUACIÓN (pilares 1, 2, 3)
+       ═══════════════════════════════════════════════════ */
+    #resultados-section { display: none; }
+    #resultados-section.visible { display: block; }
+
+    .resumen-bar {
+      display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap;
+    }
+    .res-pill {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 14px; border-radius: 20px;
+      font-size: 13px; font-weight: 600; flex: 1 1 100px; justify-content: center;
+    }
+    .res-pill.verde  { background: #0d2e22; color: var(--green); border: 1px solid #1a5c3f; }
+    .res-pill.ambar  { background: #2a2000; color: var(--yellow); border: 1px solid #4a3800; }
+    .res-pill.rojo   { background: #2e0d0d; color: var(--red); border: 1px solid #5c1a1a; }
+    .res-pill .rn { font-family: var(--mono); font-size: 17px; font-weight: 700; }
+
+    .resultado-item {
+      border-radius: var(--radius-sm); padding: 14px 16px;
+      margin-bottom: 10px; border-left: 4px solid;
+      animation: fadeUp .3s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(8px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    .resultado-item.correcto   { background: #0d2e22; border-color: var(--green); }
+    .resultado-item.ambiguo    { background: #2a2000; border-color: var(--yellow); }
+    .resultado-item.incorrecto { background: #2e0d0d; border-color: var(--red); }
+
+    .res-header {
+      display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px;
+    }
+    .res-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+    .res-txt { font-size: 14.5px; font-weight: 600; color: var(--text); line-height: 1.4; flex: 1; }
+    .res-lbl { font-size: 10px; color: var(--muted); flex-shrink: 0; padding-top: 3px; margin-left: auto; }
+
+    .fb-lista { list-style: none; display: flex; flex-direction: column; gap: 4px; padding-left: 26px; }
+    .fb-lista li { font-size: 13px; color: var(--muted); line-height: 1.5; position: relative; }
+    .fb-lista li::before { content: '→'; position: absolute; left: -17px; color: var(--soft); font-size: 11px; top: 2px; }
+    .fb-lista li b { color: var(--text); font-weight: 600; }
+    .fb-lista li em { color: var(--yellow); font-style: normal; font-weight: 500; }
+
+    /* Nota final */
+    .nota-final {
+      margin-top: 18px; padding: 16px 18px;
+      background: #12152a; border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    }
+    .nota-circle {
+      width: 52px; height: 52px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 19px; font-weight: 700; flex-shrink: 0;
+    }
+    .nc-A { background: #0d2e22; color: var(--green); border: 2px solid #1a5c3f; }
+    .nc-B { background: #1a2a1a; color: #86efac; border: 2px solid #2d5a3a; }
+    .nc-C { background: #2a2000; color: var(--yellow); border: 2px solid #4a3800; }
+    .nc-D { background: #2a1a00; color: #fca000; border: 2px solid #5a3800; }
+    .nc-F { background: #2e0d0d; color: var(--red); border: 2px solid #5c1a1a; }
+    .nota-txt h3 { font-size: 14px; font-weight: 600; color: var(--text); }
+    .nota-txt p  { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+
+    /* ═══════════════════════════════════════════════════
+       PILAR 2 — RECONOCIMIENTO DE PATRONES
+       ═══════════════════════════════════════════════════ */
+    .patron-describe {
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); padding: 12px 14px;
+      width: 100%; font-family: var(--font); font-size: 14px;
+      color: var(--text); outline: none; resize: vertical; min-height: 90px;
+      transition: border-color .2s; line-height: 1.6;
+    }
+    .patron-describe::placeholder { color: #353a55; }
+    .patron-describe:focus { border-color: var(--p2); }
+    .patron-describe-label { font-size: 13px; color: var(--soft); margin-bottom: 8px; display: block; }
+
+    /* Grid de opciones para seleccionar patrones */
+    .patrones-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px; margin-top: 14px;
+    }
+    .patron-opcion {
+      padding: 10px 14px; border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border); cursor: pointer;
+      font-size: 13px; color: var(--muted);
+      background: var(--surface); transition: all .18s;
+      display: flex; align-items: flex-start; gap: 10px; line-height: 1.4;
+      user-select: none;
+    }
+    .patron-opcion:hover { border-color: var(--p2); color: var(--text); }
+    .patron-opcion.selected {
+      border-color: var(--p2); background: var(--p2-bg); color: var(--text);
+    }
+    .patron-opcion .po-check {
+      width: 16px; height: 16px; border-radius: 4px;
+      border: 1.5px solid var(--border); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; transition: all .18s; margin-top: 1px;
+    }
+    .patron-opcion.selected .po-check {
+      background: var(--p2); border-color: var(--p2); color: #fff;
+    }
+    .patron-opcion.correcto-sel {
+      border-color: var(--green); background: #0d2e22;
+    }
+    .patron-opcion.incorrecto-sel {
+      border-color: var(--red); background: #2e0d0d;
+    }
+    .patron-opcion.deberia-sel {
+      border-color: var(--yellow); background: #2a2000;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       PILAR 4 — ALGORITMOS (drag & drop)
+       ═══════════════════════════════════════════════════ */
+    .algo-columns {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    @media (max-width: 560px) { .algo-columns { grid-template-columns: 1fr; } }
+
+    .algo-col-title {
+      font-size: 11px; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+    }
+    .algo-pool, .algo-sequence {
+      min-height: 120px; border-radius: var(--radius-sm);
+      border: 1.5px dashed var(--border2); padding: 10px;
+      display: flex; flex-direction: column; gap: 6px;
+      transition: border-color .2s; background: var(--surface);
+    }
+    .algo-pool.drag-over, .algo-sequence.drag-over {
+      border-color: var(--p4); background: var(--p4-bg);
+    }
+    .algo-step {
+      padding: 10px 14px; border-radius: 7px;
+      background: var(--card2); border: 1px solid var(--border2);
+      font-size: 13.5px; color: var(--text); cursor: grab;
+      display: flex; align-items: center; gap: 10px;
+      transition: all .18s; user-select: none;
+    }
+    .algo-step:active { cursor: grabbing; opacity: .7; }
+    .algo-step .step-handle { color: var(--muted); font-size: 14px; flex-shrink: 0; }
+    .algo-step .step-num {
+      font-family: var(--mono); font-size: 11px;
+      color: var(--p4); background: var(--p4-bg);
+      border-radius: 4px; padding: 1px 6px; flex-shrink: 0;
+      display: none;
+    }
+    .algo-sequence .algo-step .step-num { display: inline-block; }
+
+    .algo-step.correcto   { border-color: var(--green); background: #0d2e22; }
+    .algo-step.incorrecto { border-color: var(--red);   background: #2e0d0d; }
+
+    .algo-empty {
+      color: var(--muted); font-size: 13px;
+      text-align: center; padding: 20px 10px; font-style: italic;
+    }
+
+    .algo-resultado-msg {
+      margin-top: 14px; padding: 12px 16px;
+      border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
+      display: none;
+    }
+    .algo-resultado-msg.visible { display: block; }
+    .algo-resultado-msg.perfecto { background: #0d2e22; color: var(--green); border: 1px solid #1a5c3f; }
+    .algo-resultado-msg.casi    { background: #2a2000; color: var(--yellow); border: 1px solid #4a3800; }
+    .algo-resultado-msg.error   { background: #2e0d0d; color: var(--red); border: 1px solid #5c1a1a; }
+
+    /* ═══════════════════════════════════════════════════
+       SOLUCIÓN MODELO
+       ═══════════════════════════════════════════════════ */
+    #solucion-section { display: none; }
+    #solucion-section.visible { display: block; }
+
+    .sol-header {
+      background: linear-gradient(135deg, #1a2a1a, #0f1f2a);
+      border: 1px solid #2a5c3f; border-radius: var(--radius-sm);
+      padding: 14px 18px; margin-bottom: 18px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .sol-header h3 { font-size: 14px; font-weight: 700; color: var(--green); margin-bottom: 3px; }
+    .sol-header p  { font-size: 12.5px; color: var(--muted); }
+
+    .sol-item {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 11px 14px; background: #0d2e22;
+      border: 1px solid #1a5c3f; border-radius: var(--radius-sm);
+      margin-bottom: 8px; animation: fadeUp .35s ease both;
+    }
+    .sol-num {
+      font-family: var(--mono); font-size: 10px; font-weight: 700;
+      color: var(--green); background: #1a5c3f55;
+      border-radius: 4px; padding: 2px 6px; flex-shrink: 0; margin-top: 2px;
+    }
+    .sol-txt { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+    .sol-razon { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+    .sol-razon b { color: var(--green); font-weight: 600; }
+
+    .sol-nota {
+      margin-top: 14px; padding: 13px 16px;
+      background: #1a1f33; border: 1px dashed #2a3050;
+      border-radius: var(--radius-sm); font-size: 13px; color: var(--muted); line-height: 1.6;
+    }
+    .sol-nota b { color: var(--p4); }
+
+    /* ═══════════════════════════════════════════════════
+       HISTORIAL
+       ═══════════════════════════════════════════════════ */
+    #historial-section { display: none; }
+    #historial-section.visible { display: block; }
+    .hist-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+      font-size: 13px; color: var(--muted);
+    }
+    .hist-item:last-child { border-bottom: none; }
+    .hist-nota { font-family: var(--mono); font-weight: 700; }
+
+    /* ═══════════════════════════════════════════════════
+       PANELES DE PILAR (show/hide)
+       ═══════════════════════════════════════════════════ */
+    .pilar-panel { display: none; }
+    .pilar-panel.active { display: contents; }
+
+    /* ═══════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════ */
+    @media (max-width: 480px) {
+      main { padding: 0 12px; }
+      .card { padding: 16px; }
+      .pilar-intro { flex-direction: column; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     HEADER + NAVEGACIÓN POR PILARES
+     ═══════════════════════════════════════════════════ -->
+<header>
+  <div class="header-top">
+    <div class="header-badge">Pensamiento Computacional</div>
+    <h1>Los 4 Pilares</h1>
+    <p>Practicá cada habilidad con problemas reales y feedback automático</p>
+  </div>
+
+  <nav class="pilares-nav" role="tablist">
+    <button class="pilar-tab active" data-pilar="1" onclick="cambiarPilar(1)" role="tab">
+      <span class="tab-icon">🧩</span>
+      <span class="tab-label">Descomposición</span>
+      <span class="tab-badge" id="badge-1"></span>
+    </button>
+    <button class="pilar-tab" data-pilar="2" onclick="cambiarPilar(2)" role="tab">
+      <span class="tab-icon">🔍</span>
+      <span class="tab-label">Patrones</span>
+      <span class="tab-badge" id="badge-2"></span>
+    </button>
+    <button class="pilar-tab" data-pilar="3" onclick="cambiarPilar(3)" role="tab">
+      <span class="tab-icon">🎯</span>
+      <span class="tab-label">Abstracción</span>
+      <span class="tab-badge" id="badge-3"></span>
+    </button>
+    <button class="pilar-tab" data-pilar="4" onclick="cambiarPilar(4)" role="tab">
+      <span class="tab-icon">📋</span>
+      <span class="tab-label">Algoritmos</span>
+      <span class="tab-badge" id="badge-4"></span>
+    </button>
+  </nav>
+</header>
+
+<!-- ═══════════════════════════════════════════════════
+     MAIN
+     ═══════════════════════════════════════════════════ -->
+<main id="main-content">
+
+  <!-- ══════════════════════════════
+       PILAR 1 — DESCOMPOSICIÓN
+       ══════════════════════════════ -->
+  <div class="pilar-panel active" id="panel-1">
+
+    <div class="pilar-intro pi-1">
+      <span class="pilar-intro-icon">🧩</span>
+      <div>
+        <h2>Descomposición de problemas</h2>
+        <p>Dividir un problema complejo en subproblemas más pequeños, concretos y manejables. Cada subproblema debe representar <strong style="color:#fff">una sola acción</strong> expresada con un verbo en infinitivo.</p>
+        <div class="pilar-tip">✦ Cada línea debe empezar con un verbo en infinitivo (-ar, -er, -ir) y ser precisa.</div>
+      </div>
+    </div>
+
+    <!-- Problema -->
+    <div class="card" id="p1-problema-card">
+      <div class="card-title"><span class="cdot cdot-1"></span>Problema a resolver</div>
+      <p id="p1-problema-texto">Cargando...</p>
+      <div class="actions">
+        <button class="btn btn-sec" onclick="cargarProblema(1)">🔀 Otro problema</button>
+      </div>
+    </div>
+
+    <!-- Entrada -->
+    <div class="card">
+      <div class="card-title"><span class="cdot cdot-1"></span>Tu descomposición</div>
+      <div id="p1-rows"></div>
+      <div class="actions">
+        <button class="btn btn-sec" onclick="addRow(1)">+ Agregar subproblema</button>
+        <button class="btn btn-p1" onclick="evalP1()">✦ Evaluar</button>
+        <button class="btn btn-ghost" onclick="limpiarP1()">Limpiar</button>
+      </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="card" id="p1-resultados" style="display:none">
+      <div class="card-title"><span class="cdot cdot-1"></span>Resultados</div>
+      <div class="resumen-bar">
+        <div class="res-pill verde"><span class="rn" id="p1-cnt-c">0</span> ✅ Correctos</div>
+        <div class="res-pill ambar"><span class="rn" id="p1-cnt-a">0</span> ⚠️ Ambiguos</div>
+        <div class="res-pill rojo"><span class="rn"  id="p1-cnt-i">0</span> ❌ Incorrectos</div>
+      </div>
+      <div id="p1-res-lista"></div>
+      <div class="nota-final">
+        <div class="nota-circle" id="p1-nota-circle">–</div>
+        <div class="nota-txt">
+          <h3 id="p1-nota-titulo">—</h3>
+          <p id="p1-nota-desc">—</p>
+        </div>
+      </div>
+      <div class="actions" style="margin-top:16px">
+        <button class="btn btn-p1" onclick="document.getElementById('p1-rows').scrollIntoView({behavior:'smooth'})">✏️ Corregir y re-evaluar</button>
+      </div>
+    </div>
+
+    <!-- Solución -->
+    <div class="card" id="p1-solucion" style="display:none">
+      <div class="card-title"><span class="cdot cdot-1"></span>Solución modelo</div>
+      <div class="sol-header">
+        <span style="font-size:26px">🏆</span>
+        <div>
+          <h3>Después de 3 intentos — solución de referencia</h3>
+          <p>Una descomposición correcta del problema. No es la única válida, pero cumple todos los criterios.</p>
+        </div>
+      </div>
+      <div id="p1-sol-lista"></div>
+      <div class="sol-nota" id="p1-sol-nota"></div>
+    </div>
+
+    <!-- Historial -->
+    <div class="card" id="p1-historial" style="display:none">
+      <div class="card-title"><span class="cdot cdot-1"></span>Historial de intentos</div>
+      <div id="p1-hist-lista"></div>
+    </div>
+
+  </div><!-- /panel-1 -->
+
+
+  <!-- ══════════════════════════════
+       PILAR 2 — RECONOCIMIENTO DE PATRONES
+       ══════════════════════════════ -->
+  <div class="pilar-panel" id="panel-2">
+
+    <div class="pilar-intro pi-2">
+      <span class="pilar-intro-icon">🔍</span>
+      <div>
+        <h2>Reconocimiento de patrones</h2>
+        <p>Identificar similitudes, regularidades y estructuras que se repiten dentro de un problema o entre problemas. Reconocer patrones permite reutilizar soluciones conocidas.</p>
+        <div class="pilar-tip">✦ Describí los patrones que ves y seleccioná cuáles se aplican al problema.</div>
+      </div>
+    </div>
+
+    <!-- Problema -->
+    <div class="card">
+      <div class="card-title"><span class="cdot cdot-2"></span>Problema a analizar</div>
+      <p id="p2-problema-texto">Cargando...</p>
+      <div class="actions">
+        <button class="btn btn-sec" onclick="cargarProblema(2)">🔀 Otro problema</button>
+      </div>
+    </div>
+
+    <!-- Entrada: describe + selecciona -->
+    <div class="card">
+      <div class="card-title"><span class="cdot cdot-2"></span>Tu análisis de patrones</div>
+
+      <label class="patron-describe-label">1. Describí con tus palabras: ¿qué patrones o repeticiones identificás en este problema?</label>
+      <textarea id="p2-descripcion" class="patron-describe" placeholder="Ej: el sistema repite una misma acción para distintos usuarios... hay una estructura que se repite en cada registro..."></textarea>
+
+      <div style="margin-top:18px">
+        <label class="patron-describe-label">2. Seleccioná los patrones que se aplican a este problema:</label>
+        <div class="patrones-grid" id="p2-opciones-grid"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-p2" onclick="evalP2()">✦ Evaluar</button>
+        <button class="btn btn-ghost" onclick="limpiarP2()">Limpiar</button>
+      </div>
+    </div>
+
+    <!-- Resultados P2 -->
+    <div class="card" id="p2-resultados" style="display:none">
+      <div class="card-title"><span class="cdot cdot-2"></span>Resultados</div>
+      <div id="p2-res-body"></div>
+      <div class="nota-final">
+        <div class="nota-circle" id="p2-nota-circle">–</div>
+        <div class="nota-txt">
+          <h3 id="p2-nota-titulo">—</h3>
+          <p id="p2-nota-desc">—</p>
+        </div>
+      </div>
+      <div class="actions" style="margin-top:16px">
+        <button class="btn btn-p2" onclick="document.getElementById('p2-descripcion').scrollIntoView({behavior:'smooth'})">✏️ Corregir y re-evaluar</button>
+      </div>
+    </div>
+
+    <!-- Solución P2 -->
+    <div class="card" id="p2-solucion" style="display:none">
+      <div class="card-title"><span class="cdot cdot-2"></span>Solución modelo</div>
+      <div class="sol-header">
+        <span style="font-size:26px">🏆</span>
+        <div>
+          <h3>Después de 3 intentos — solución de referencia</h3>
+          <p>Los patrones que se aplican a este problema y por qué.</p>
+        </div>
+      </div>
+      <div id="p2-sol-body"></div>
+      <div class="sol-nota" id="p2-sol-nota"></div>
+    </div>
+
+    <!-- Historial P2 -->
+    <div class="card" id="p2-historial" style="display:none">
+      <div class="card-title"><span class="cdot cdot-2"></span>Historial de intentos</div>
+      <div id="p2-hist-lista"></div>
+    </div>
+
+  </div><!-- /panel-2 -->
+
+
+  <!-- ══════════════════════════════
+       PILAR 3 — ABSTRACCIÓN
+       ══════════════════════════════ -->
+  <div class="pilar-panel" id="panel-3">
+
+    <div class="pilar-intro pi-3">
+      <span class="pilar-intro-icon">🎯</span>
+      <div>
+        <h2>Abstracción</h2>
+        <p>Identificar qué información es <strong style="color:#fff">esencial</strong> para resolver el problema y qué detalles pueden ignorarse. Abstraer es separar lo relevante de lo irrelevante.</p>
+        <div class="pilar-tip">✦ Listá los datos esenciales y los que descartarías. Justificá cada elección.</div>
+      </div>
+    </div>
+
+    <!-- Problema -->
+    <div class="card">
+      <div class="card-title"><span class="cdot cdot-3"></span>Problema a abstraer</div>
+      <p id="p3-problema-texto">Cargando...</p>
+      <div class="actions">
+        <button class="btn btn-sec" onclick="cargarProblema(3)">🔀 Otro problema</button>
+      </div>
+    </div>
+
+    <!-- Entrada P3 -->
+    <div class="card">
+      <div class="card-title"><span class="cdot cdot-3"></span>Tu abstracción</div>
+
+      <label class="patron-describe-label" style="color:var(--green)">Datos / elementos ESENCIALES (no pueden faltar)</label>
+      <div id="p3-esenciales-rows"></div>
+      <div class="actions" style="margin-top:8px">
+        <button class="btn btn-sec" onclick="addRowGen('p3-esenciales-rows', 'Ej: nombre del usuario, fecha del pedido...')">+ Agregar dato esencial</button>
+      </div>
+
+      <div style="margin-top:20px">
+        <label class="patron-describe-label" style="color:var(--muted)">Datos / detalles que IGNORARÍAS (no son necesarios para resolver el problema)</label>
+        <div id="p3-ignorar-rows"></div>
+        <div class="actions" style="margin-top:8px">
+          <button class="btn btn-sec" onclick="addRowGen('p3-ignorar-rows', 'Ej: el color del botón, el nombre del programador...')">+ Agregar dato a ignorar</button>
+        </div>
+      </div>
+
+      <div style="margin-top:20px">
+        <label class="patron-describe-label">¿Por qué elegiste abstraer así? Justificá brevemente.</label>
+        <textarea id="p3-justificacion" class="patron-describe" style="min-height:70px" placeholder="Ej: incluí solo los datos que el sistema necesita para funcionar, ignorando los detalles visuales..."></textarea>
+      </div>
+
+      <div class="actions" style="margin-top:14px">
+        <button class="btn btn-p3" onclick="evalP3()">✦ Evaluar</button>
+        <button class="btn btn-ghost" onclick="limpiarP3()">Limpiar</button>
+      </div>
+    </div>
+
+    <!-- Resultados P3 -->
+    <div class="card" id="p3-resultados" style="display:none">
+      <div class="card-title"><span class="cdot cdot-3"></span>Resultados</div>
+      <div id="p3-res-body"></div>
+      <div class="nota-final">
+        <div class="nota-circle" id="p3-nota-circle">–</div>
+        <div class="nota-txt">
+          <h3 id="p3-nota-titulo">—</h3>
+          <p id="p3-nota-desc">—</p>
+        </div>
+      </div>
+      <div class="actions" style="margin-top:16px">
+        <button class="btn btn-p3" onclick="document.getElementById('p3-esenciales-rows').scrollIntoView({behavior:'smooth'})">✏️ Corregir y re-evaluar</button>
+      </div>
+    </div>
+
+    <!-- Solución P3 -->
+    <div class="card" id="p3-solucion" style="display:none">
+      <div class="card-title"><span class="cdot cdot-3"></span>Solución modelo</div>
+      <div class="sol-header" style="border-color:#1a5c3f">
+        <span style="font-size:26px">🏆</span>
+        <div>
+          <h3>Después de 3 intentos — solución de referencia</h3>
+          <p>Los datos esenciales vs. los prescindibles, con justificación.</p>
+        </div>
+      </div>
+      <div id="p3-sol-body"></div>
+      <div class="sol-nota" id="p3-sol-nota"></div>
+    </div>
+
+    <!-- Historial P3 -->
+    <div class="card" id="p3-historial" style="display:none">
+      <div class="card-title"><span class="cdot cdot-3"></span>Historial de intentos</div>
+      <div id="p3-hist-lista"></div>
+    </div>
+
+  </div><!-- /panel-3 -->
+
+
+  <!-- ══════════════════════════════
+       PILAR 4 — ALGORITMOS
+       ══════════════════════════════ -->
+  <div class="pilar-panel" id="panel-4">
+
+    <div class="pilar-intro pi-4">
+      <span class="pilar-intro-icon">📋</span>
+      <div>
+        <h2>Diseño de algoritmos</h2>
+        <p>Definir una secuencia de pasos <strong style="color:#fff">ordenados y sin ambigüedades</strong> para resolver un problema. Un algoritmo debe ser preciso, finito y ejecutable.</p>
+        <div class="pilar-tip">✦ Arrastrá los pasos al panel derecho y ordenalos correctamente.</div>
+      </div>
+    </div>
+
+    <!-- Problema -->
+    <div class="card">
+      <div class="card-title"><span class="cdot cdot-4"></span>Tarea a algoritmizar</div>
+      <p id="p4-problema-texto">Cargando...</p>
+      <div class="actions">
+        <button class="btn btn-sec" onclick="cargarProblema(4)">🔀 Otro problema</button>
+      </div>
+    </div>
+
+    <!-- Drag & Drop -->
+    <div class="card">
+      <div class="card-title"><span class="cdot cdot-4"></span>Ordená los pasos</div>
+      <div class="algo-columns">
+        <div>
+          <div class="algo-col-title">📦 Pasos disponibles</div>
+          <div class="algo-pool" id="p4-pool"
+               ondragover="dragOver(event)" ondrop="dropTo(event,'pool')" ondragleave="dragLeave(event)">
+            <div class="algo-empty" id="p4-pool-empty">Todos los pasos están en la secuencia</div>
+          </div>
+        </div>
+        <div>
+          <div class="algo-col-title">✅ Tu secuencia (en orden)</div>
+          <div class="algo-sequence" id="p4-sequence"
+               ondragover="dragOver(event)" ondrop="dropTo(event,'sequence')" ondragleave="dragLeave(event)">
+            <div class="algo-empty" id="p4-seq-empty">Arrastrá los pasos aquí</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="p4-resultado-msg" class="algo-resultado-msg"></div>
+
+      <div class="actions">
+        <button class="btn btn-p4" onclick="evalP4()">✦ Verificar orden</button>
+        <button class="btn btn-sec" onclick="verSolucionP4()" id="p4-btn-sol" style="display:none">🏆 Ver solución</button>
+        <button class="btn btn-ghost" onclick="resetP4()">↺ Reiniciar</button>
+      </div>
+    </div>
+
+    <!-- Solución P4 -->
+    <div class="card" id="p4-solucion" style="display:none">
+      <div class="card-title"><span class="cdot cdot-4"></span>Secuencia correcta</div>
+      <div id="p4-sol-lista"></div>
+      <div class="sol-nota" id="p4-sol-nota"></div>
+    </div>
+
+    <!-- Historial P4 -->
+    <div class="card" id="p4-historial" style="display:none">
+      <div class="card-title"><span class="cdot cdot-4"></span>Historial de intentos</div>
+      <div id="p4-hist-lista"></div>
+    </div>
+
+  </div><!-- /panel-4 -->
+
+</main>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   BASE DE DATOS DE PROBLEMAS — 5 por pilar
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── PILAR 1: DESCOMPOSICIÓN ─────────────────────────────────────── */
+const DATA_P1 = [
+  {
+    id:1,
+    texto:`<strong>Sistema de préstamo de libros en una biblioteca escolar.</strong><br>
+           Una biblioteca necesita que los alumnos busquen libros disponibles, registren préstamos
+           y devoluciones, y reciban recordatorios cuando el plazo está por vencer.`,
+    dominio:['libro','alumno','préstamo','devolución','plazo','recordatorio','registro','buscar'],
+    solucion:[
+      {texto:'Buscar libros disponibles por título, autor o categoría', razon:'<b>Verbo preciso</b> + especifica tres criterios de búsqueda.'},
+      {texto:'Registrar el préstamo indicando el alumno, el libro y la fecha', razon:'Todos los datos necesarios: quién, qué y cuándo.'},
+      {texto:'Registrar la devolución y actualizar la disponibilidad del libro', razon:'Dos efectos ligados que forman una unidad lógica.'},
+      {texto:'Calcular la fecha límite de devolución de cada préstamo', razon:'Operación matemática separada del registro.'},
+      {texto:'Detectar los préstamos cuyo plazo está por vencer', razon:'Acción de consulta, previa al envío del recordatorio.'},
+      {texto:'Enviar un recordatorio al alumno cuando el vencimiento se acerca', razon:'Acción de comunicación externa, bien delimitada.'}
+    ],
+    nota:'💡 <b>Reflexión:</b> separamos "detectar" de "enviar" porque son responsabilidades distintas: una consulta datos, la otra realiza una acción externa.'
+  },
+  {
+    id:2,
+    texto:`<strong>Aplicación de control de gastos personales.</strong><br>
+           Una persona quiere ingresar gastos con categoría, ver el total por categoría
+           y recibir una alerta cuando supera el presupuesto asignado.`,
+    dominio:['gasto','categoría','presupuesto','alerta','total','mes','superar','ingresar'],
+    solucion:[
+      {texto:'Registrar un gasto con su monto, categoría y fecha', razon:'Tres datos obligatorios bien especificados.'},
+      {texto:'Definir el presupuesto mensual para cada categoría', razon:'Paso previo e independiente necesario para comparar.'},
+      {texto:'Calcular el total gastado por categoría en el mes actual', razon:'Operación de agrupación y suma, separada del registro.'},
+      {texto:'Comparar el total gastado con el presupuesto de cada categoría', razon:'Operación lógica distinta al cálculo: produce verdadero/falso.'},
+      {texto:'Mostrar una alerta cuando el gasto supera el presupuesto', razon:'Consecuencia de la comparación, acción de interfaz separada.'}
+    ],
+    nota:'💡 <b>Reflexión:</b> "calcular" y "comparar" son pasos distintos. Calcular produce un número; comparar toma una decisión.'
+  },
+  {
+    id:3,
+    texto:`<strong>Sistema de turnos para un consultorio médico.</strong><br>
+           Los pacientes deben poder sacar turno en línea, elegir horario disponible,
+           recibir confirmación por email, y cancelar o reprogramar con 24 hs de anticipación.`,
+    dominio:['turno','paciente','horario','confirmación','cancelar','reprogramar','email','anticipación'],
+    solucion:[
+      {texto:'Consultar los horarios disponibles para una fecha seleccionada', razon:'Acción de lectura con parámetro específico (la fecha).'},
+      {texto:'Registrar el turno seleccionado por el paciente', razon:'Acción de escritura separada de la consulta previa.'},
+      {texto:'Enviar una confirmación del turno al email del paciente', razon:'Comunicación externa precisa: qué, por qué medio y a quién.'},
+      {texto:'Validar que la cancelación se realice con al menos 24 horas de anticipación', razon:'Regla de negocio específica y verificable.'},
+      {texto:'Cancelar el turno y liberar el horario correspondiente', razon:'Dos efectos ligados que ocurren juntos.'},
+      {texto:'Reprogramar el turno asignando un nuevo horario disponible', razon:'Flujo distinto a cancelar: implica buscar y asignar nuevo horario.'}
+    ],
+    nota:'💡 <b>Reflexión:</b> cancelar y reprogramar son flujos distintos aunque parecidos. Identificar esas diferencias es clave en la descomposición.'
+  },
+  {
+    id:4,
+    texto:`<strong>Juego de trivia para el aula.</strong><br>
+           Los alumnos responden preguntas de opción múltiple. El juego muestra preguntas al azar,
+           controla el tiempo de respuesta y muestra un ranking final.`,
+    dominio:['pregunta','alumno','puntaje','tiempo','ranking','respuesta','opción','partida'],
+    solucion:[
+      {texto:'Seleccionar una pregunta al azar del banco de preguntas', razon:'Acción clara con método (al azar) y fuente (banco) especificados.'},
+      {texto:'Mostrar la pregunta con sus opciones al alumno', razon:'Presentación separada de la selección.'},
+      {texto:'Iniciar el contador de tiempo para la respuesta', razon:'Responsabilidad técnica independiente: el cronómetro.'},
+      {texto:'Registrar la respuesta elegida por el alumno', razon:'Captura del dato antes de evaluarlo.'},
+      {texto:'Evaluar si la respuesta es correcta y actualizar el puntaje', razon:'Lógica de juego: comparación + consecuencia.'},
+      {texto:'Mostrar el ranking final con los puntajes de todos los alumnos', razon:'Acción de cierre del juego, bien delimitada.'}
+    ],
+    nota:'💡 <b>Reflexión:</b> registrar la respuesta y evaluar si es correcta son pasos distintos. Separar permite corregir cada uno sin tocar el otro.'
+  },
+  {
+    id:5,
+    texto:`<strong>Sistema de seguimiento de pedidos en un restaurante.</strong><br>
+           Los mozos toman pedidos desde una tablet, la cocina los recibe en tiempo real,
+           se marcan los platos como listos y se genera la cuenta al finalizar.`,
+    dominio:['pedido','mozo','cocina','plato','cuenta','precio','tablet','notificar'],
+    solucion:[
+      {texto:'Registrar los platos seleccionados por el cliente en el pedido', razon:'Acción de entrada de datos con contexto claro.'},
+      {texto:'Enviar el pedido a la pantalla de la cocina en tiempo real', razon:'Comunicación separada del registro.'},
+      {texto:'Marcar un plato como listo cuando la cocina lo termina', razon:'Cambio de estado específico y verificable.'},
+      {texto:'Notificar al mozo cuando todos los platos del pedido están listos', razon:'Acción de comunicación que depende del estado del pedido.'},
+      {texto:'Calcular el total de la cuenta sumando los precios de los platos pedidos', razon:'Operación matemática con datos y resultado claros.'},
+      {texto:'Generar e imprimir la cuenta con el detalle de platos y precios', razon:'Presentación del resultado, separada del cálculo.'}
+    ],
+    nota:'💡 <b>Reflexión:</b> calcular el total y generar la cuenta son pasos distintos. El cálculo es interno; generar es una acción hacia el usuario.'
+  }
+];
+
+/* ── PILAR 2: RECONOCIMIENTO DE PATRONES ─────────────────────────── */
+// Cada problema tiene patrones posibles; "correctos" son los que aplican.
+const PATRONES_DISPONIBLES = [
+  { id:'p_repeticion',  texto:'Repetición de acciones', desc:'Una misma operación se aplica a múltiples elementos.' },
+  { id:'p_validacion',  texto:'Validación de entrada',  desc:'Verificar datos antes de procesarlos.' },
+  { id:'p_notificacion',texto:'Notificación automática',desc:'El sistema avisa a un actor cuando ocurre algo.' },
+  { id:'p_registro',    texto:'Registro de eventos',    desc:'Guardar información sobre lo que sucede.' },
+  { id:'p_calculo',     texto:'Cálculo y acumulación',  desc:'Sumar, promediar o acumular valores.' },
+  { id:'p_estado',      texto:'Cambio de estado',       desc:'Un objeto pasa de un estado a otro (disponible/prestado, pendiente/listo).' },
+  { id:'p_clasificacion',texto:'Clasificación/agrupación', desc:'Organizar elementos por categoría o tipo.' },
+  { id:'p_busqueda',    texto:'Búsqueda y filtrado',    desc:'Encontrar elementos que cumplen una condición.' },
+  { id:'p_autenticacion',texto:'Autenticación/acceso',  desc:'Verificar identidad antes de permitir una acción.' },
+  { id:'p_cronometro',  texto:'Control de tiempo',      desc:'Medir o limitar el tiempo de una operación.' },
+  { id:'p_generacion',  texto:'Generación de reportes/salidas', desc:'Producir un documento o vista con información procesada.' },
+  { id:'p_ranking',     texto:'Ordenamiento/ranking',   desc:'Ordenar elementos por algún criterio (puntaje, fecha, etc.).' }
+];
+
+const DATA_P2 = [
+  {
+    id:1,
+    texto:`<strong>Sistema de préstamo de libros en una biblioteca escolar.</strong><br>
+           Alumnos buscan libros, registran préstamos y devoluciones, y reciben recordatorios de vencimiento.`,
+    correctos:['p_repeticion','p_notificacion','p_registro','p_estado','p_busqueda'],
+    descripcionIdeal:'El sistema repite la misma secuencia (prestar → devolver) para cada libro y cada alumno. El estado del libro cambia de disponible a prestado. Se registran eventos (quién, cuándo). Y hay notificación automática al acercarse el vencimiento.',
+    solucion:[
+      {patron:'Repetición de acciones', razon:'La misma secuencia (registrar préstamo → registrar devolución) se repite para cada libro y cada alumno.'},
+      {patron:'Cambio de estado', razon:'Cada libro pasa del estado "disponible" a "prestado" y vuelve a "disponible" al ser devuelto.'},
+      {patron:'Registro de eventos', razon:'El sistema guarda quién tiene qué libro desde cuándo — registro de cada evento de préstamo/devolución.'},
+      {patron:'Notificación automática', razon:'El sistema avisa al alumno cuando el plazo está por vencer, sin intervención manual.'},
+      {patron:'Búsqueda y filtrado', razon:'Los alumnos buscan libros por título, autor o categoría — filtrado de la colección.'}
+    ],
+    nota:'💡 <b>Reflexión:</b> notar el patrón de "cambio de estado" permite reutilizar la misma lógica en cualquier sistema con objetos que pueden estar disponibles o no (turnos, equipos, aulas, etc.).'
+  },
+  {
+    id:2,
+    texto:`<strong>Aplicación de control de gastos personales.</strong><br>
+           Ingreso de gastos por categoría, cálculo del total por categoría y alerta al superar el presupuesto.`,
+    correctos:['p_repeticion','p_calculo','p_clasificacion','p_notificacion','p_validacion'],
+    descripcionIdeal:'Se repite el ingreso de gastos. Cada gasto se clasifica por categoría. Se acumulan los montos. Al superar el presupuesto, hay una notificación. Los datos se validan al ingresar.',
+    solucion:[
+      {patron:'Repetición de acciones', razon:'El usuario ingresa múltiples gastos usando siempre el mismo formulario.'},
+      {patron:'Clasificación/agrupación', razon:'Cada gasto se asigna a una categoría; los totales se calculan por grupo.'},
+      {patron:'Cálculo y acumulación', razon:'Se suman los montos de cada categoría para obtener el total mensual.'},
+      {patron:'Notificación automática', razon:'El sistema alerta al usuario cuando el gasto supera el presupuesto de una categoría.'},
+      {patron:'Validación de entrada', razon:'El monto y la categoría deben ser válidos antes de registrarse.'}
+    ],
+    nota:'💡 <b>Reflexión:</b> el patrón de clasificación + acumulación aparece en muchísimos sistemas: ventas por región, notas por materia, votos por candidato. Reconocerlo permite reutilizar la misma solución.'
+  },
+  {
+    id:3,
+    texto:`<strong>Juego de trivia para el aula.</strong><br>
+           Preguntas al azar con tiempo límite, registro de puntajes y ranking final.`,
+    correctos:['p_repeticion','p_calculo','p_cronometro','p_ranking','p_registro'],
+    descripcionIdeal:'La misma secuencia (mostrar pregunta → registrar respuesta → actualizar puntaje) se repite para cada pregunta. Hay un cronómetro. Los puntajes se acumulan y al final se ordenan en un ranking.',
+    solucion:[
+      {patron:'Repetición de acciones', razon:'La secuencia mostrar-responder-evaluar se repite para cada pregunta del juego.'},
+      {patron:'Control de tiempo', razon:'Cada pregunta tiene un tiempo límite que el sistema mide y controla.'},
+      {patron:'Cálculo y acumulación', razon:'El puntaje de cada pregunta se suma al total acumulado del alumno.'},
+      {patron:'Registro de eventos', razon:'Se guarda qué respondió cada alumno en cada pregunta para calcular el puntaje final.'},
+      {patron:'Ordenamiento/ranking', razon:'Al final, los alumnos se ordenan de mayor a menor puntaje para mostrar el ranking.'}
+    ],
+    nota:'💡 <b>Reflexión:</b> el patrón "repetir acción por cada elemento de una lista" es uno de los más fundamentales en programación. Aquí se repite la ronda por cada pregunta del banco.'
+  },
+  {
+    id:4,
+    texto:`<strong>Sistema de seguimiento de pedidos en un restaurante.</strong><br>
+           Los mozos registran pedidos, la cocina los recibe, marca los platos listos y se genera la cuenta.`,
+    correctos:['p_repeticion','p_estado','p_notificacion','p_calculo','p_generacion'],
+    descripcionIdeal:'El mismo flujo (pedido → cocina → listo → entregado) se repite para cada mesa. El estado de cada plato cambia. La cocina recibe notificaciones. Al final se calcula el total y se genera la cuenta.',
+    solucion:[
+      {patron:'Repetición de acciones', razon:'El flujo completo (pedir → cocinar → servir → pagar) se repite para cada mesa del restaurante.'},
+      {patron:'Cambio de estado', razon:'Cada plato pasa de "pedido" a "en preparación" a "listo" a "entregado".'},
+      {patron:'Notificación automática', razon:'La cocina recibe el pedido automáticamente; el mozo es avisado cuando los platos están listos.'},
+      {patron:'Cálculo y acumulación', razon:'El total de la cuenta se obtiene sumando los precios de todos los platos pedidos.'},
+      {patron:'Generación de reportes/salidas', razon:'Al cerrar la mesa se genera la cuenta con el detalle completo del pedido.'}
+    ],
+    nota:'💡 <b>Reflexión:</b> el patrón de "cambio de estado" con notificaciones aparece en sistemas de logística, entregas, producción y muchos más. Reconocerlo te ahorra diseñar desde cero cada vez.'
+  },
+  {
+    id:5,
+    texto:`<strong>Plataforma de cursos en línea.</strong><br>
+           Los alumnos se inscriben, acceden a videos y ejercicios, completan entregas y reciben un certificado al aprobar.`,
+    correctos:['p_autenticacion','p_repeticion','p_estado','p_validacion','p_generacion'],
+    descripcionIdeal:'Hay un proceso de login (autenticación). El mismo ciclo (ver material → hacer ejercicio → entregar) se repite por cada módulo. El estado del alumno avanza. Las entregas se validan. Al aprobar se genera un certificado.',
+    solucion:[
+      {patron:'Autenticación/acceso', razon:'Los alumnos deben identificarse antes de acceder al contenido del curso.'},
+      {patron:'Repetición de acciones', razon:'El mismo ciclo (ver material → ejercitar → entregar) se repite para cada módulo o unidad.'},
+      {patron:'Cambio de estado', razon:'El alumno avanza de "inscripto" a "en curso" a "aprobado" a medida que completa etapas.'},
+      {patron:'Validación de entrada', razon:'Las entregas se verifican (formato, plazo, completitud) antes de registrarlas como válidas.'},
+      {patron:'Generación de reportes/salidas', razon:'Al aprobar, el sistema genera y emite el certificado de finalización.'}
+    ],
+    nota:'💡 <b>Reflexión:</b> la autenticación aparece en casi todos los sistemas con usuarios. Reconocerlo como patrón evita reinventarlo y permite usar soluciones probadas (OAuth, JWT, sesiones).'
+  }
+];
+
+/* ── PILAR 3: ABSTRACCIÓN ────────────────────────────────────────── */
+const DATA_P3 = [
+  {
+    id:1,
+    texto:`<strong>Sistema de préstamo de libros en una biblioteca escolar.</strong><br>
+           Alumnos buscan libros, registran préstamos y devoluciones, y reciben recordatorios de vencimiento.`,
+    esenciales:['ID o código del libro','Título del libro','Estado del libro (disponible/prestado)','ID o nombre del alumno','Fecha de préstamo','Fecha límite de devolución'],
+    prescindibles:['Color de la portada','Número de páginas','Editorial (a menos que se busque por ella)','Precio de compra del libro','Nombre del autor (para registrar el préstamo, no para buscarlo)'],
+    justificacion:'Solo necesitamos saber QUÉ libro, QUIÉN lo tiene y CUÁNDO debe devolverlo. El resto son datos útiles para búsqueda pero no para gestionar préstamos.',
+    solucion:[
+      {tipo:'esencial', dato:'ID/código del libro', razon:'Identifica unívocamente qué libro está prestado.'},
+      {tipo:'esencial', dato:'Estado del libro (disponible/prestado)', razon:'Sin esto, no se puede saber si un libro puede prestarse.'},
+      {tipo:'esencial', dato:'ID o nombre del alumno', razon:'Necesario para saber quién tiene el libro.'},
+      {tipo:'esencial', dato:'Fecha de préstamo y fecha límite de devolución', razon:'Sin estas fechas no se pueden calcular vencimientos ni enviar recordatorios.'},
+      {tipo:'prescindible', dato:'Color de la portada', razon:'No afecta ninguna operación del sistema.'},
+      {tipo:'prescindible', dato:'Precio de compra del libro', razon:'Podría ser relevante si se repone el libro, pero no para gestionar préstamos.'},
+      {tipo:'prescindible', dato:'Número de páginas', razon:'No es necesario para prestar ni devolver.'}
+    ],
+    nota:'💡 <b>Reflexión:</b> abstraer bien significa preguntarse "¿necesito este dato para que el sistema funcione?" Si la respuesta es no, probablemente sobre.'
+  },
+  {
+    id:2,
+    texto:`<strong>Aplicación de control de gastos personales.</strong><br>
+           Ingreso de gastos con categoría, cálculo del total por categoría y alerta al superar el presupuesto.`,
+    esenciales:['Monto del gasto','Categoría del gasto','Fecha del gasto','Presupuesto mensual por categoría'],
+    prescindibles:['Lugar donde se realizó la compra','Método de pago (efectivo/tarjeta)','Nombre del comercio','Foto del ticket','Descripción larga del producto'],
+    justificacion:'Para controlar gastos solo necesitamos cuánto se gastó, en qué categoría y cuándo. Todo lo demás es información adicional que enriquece pero no es esencial.',
+    solucion:[
+      {tipo:'esencial', dato:'Monto del gasto', razon:'Es el valor que se suma para calcular totales y comparar con el presupuesto.'},
+      {tipo:'esencial', dato:'Categoría del gasto', razon:'Permite agrupar y comparar con el presupuesto por categoría.'},
+      {tipo:'esencial', dato:'Fecha del gasto', razon:'Necesaria para filtrar por mes y saber a qué período pertenece.'},
+      {tipo:'esencial', dato:'Presupuesto por categoría', razon:'Sin este dato no se puede determinar si se superó el límite.'},
+      {tipo:'prescindible', dato:'Foto del ticket', razon:'Útil como comprobante pero no para el cálculo de gastos.'},
+      {tipo:'prescindible', dato:'Nombre del comercio', razon:'No se usa para calcular totales por categoría.'},
+      {tipo:'prescindible', dato:'Descripción larga del producto', razon:'Para el control de gastos alcanza con la categoría.'}
+    ],
+    nota:'💡 <b>Reflexión:</b> la abstracción no descarta información para siempre — solo decide qué necesita el sistema para su propósito específico. Un sistema contable sí necesitaría el método de pago.'
+  },
+  {
+    id:3,
+    texto:`<strong>Sistema de turnos para un consultorio médico.</strong><br>
+           Pacientes sacan turno en línea, eligen horario, reciben confirmación y pueden cancelar o reprogramar.`,
+    esenciales:['Nombre e ID del paciente','Fecha y hora del turno','Estado del turno (disponible/reservado/cancelado)','Email del paciente (para confirmación)','Tiempo de anticipación mínima para cancelar (24 hs)'],
+    prescindibles:['Dirección del paciente','Motivo detallado de la consulta','Obra social (si no afecta disponibilidad)','Foto del paciente','Historial completo de consultas anteriores'],
+    justificacion:'Para gestionar turnos solo necesitamos identificar al paciente, reservar el horario, notificarlo y gestionar cancelaciones según la regla de 24 hs.',
+    solucion:[
+      {tipo:'esencial', dato:'Nombre e ID del paciente', razon:'Identifica quién reservó el turno.'},
+      {tipo:'esencial', dato:'Fecha y hora del turno', razon:'Define cuándo es el turno; sin esto no hay reserva.'},
+      {tipo:'esencial', dato:'Estado del turno', razon:'Permite saber si el horario está disponible, reservado o cancelado.'},
+      {tipo:'esencial', dato:'Email del paciente', razon:'Necesario para enviar confirmación y recordatorios.'},
+      {tipo:'esencial', dato:'Regla de 24 hs de anticipación', razon:'Es la condición de negocio que valida si se puede cancelar.'},
+      {tipo:'prescindible', dato:'Dirección del paciente', razon:'No es necesaria para reservar ni gestionar el turno.'},
+      {tipo:'prescindible', dato:'Historial de consultas anteriores', razon:'Puede ser útil al médico pero no para el sistema de turnos.'}
+    ],
+    nota:'💡 <b>Reflexión:</b> la abstracción depende del alcance del sistema. Un sistema de turnos no necesita el historial médico; un sistema de historia clínica, sí.'
+  },
+  {
+    id:4,
+    texto:`<strong>Juego de trivia para el aula.</strong><br>
+           Preguntas de opción múltiple con tiempo límite, registro de puntajes y ranking final.`,
+    esenciales:['Texto de la pregunta','Opciones de respuesta','Respuesta correcta','Puntaje por pregunta correcta','Tiempo límite por pregunta','Nombre del alumno'],
+    prescindibles:['Imagen decorativa de la pregunta','Fuente bibliográfica de la pregunta','Dificultad guardada (si el juego no la usa)','Color del avatar del alumno','Estadísticas de otras partidas anteriores'],
+    justificacion:'El juego necesita saber qué se pregunta, cuáles son las opciones, cuál es la correcta, cuánto vale y quién responde. El resto es presentación o datos históricos no usados en la partida.',
+    solucion:[
+      {tipo:'esencial', dato:'Texto de la pregunta y opciones', razon:'Sin esto no hay pregunta que mostrar.'},
+      {tipo:'esencial', dato:'Respuesta correcta', razon:'Necesaria para evaluar si el alumno acertó.'},
+      {tipo:'esencial', dato:'Puntaje por pregunta', razon:'Define cuánto suma cada respuesta correcta.'},
+      {tipo:'esencial', dato:'Tiempo límite por pregunta', razon:'El juego controla el tiempo; si no se guarda el límite, no puede verificarlo.'},
+      {tipo:'esencial', dato:'Nombre del alumno', razon:'Necesario para mostrar el ranking con los nombres.'},
+      {tipo:'prescindible', dato:'Imagen decorativa de fondo', razon:'Hace la interfaz más atractiva pero no afecta la lógica del juego.'},
+      {tipo:'prescindible', dato:'Fuente bibliográfica de la pregunta', razon:'Útil para el docente al crear preguntas, pero el juego no la necesita.'}
+    ],
+    nota:'💡 <b>Reflexión:</b> en el diseño de videojuegos, abstraer bien los datos de cada entidad (pregunta, jugador, partida) es lo primero que se hace antes de programar.'
+  },
+  {
+    id:5,
+    texto:`<strong>Sistema de seguimiento de pedidos en un restaurante.</strong><br>
+           Mozos registran pedidos desde tablet, la cocina los recibe, se marcan platos como listos y se genera la cuenta.`,
+    esenciales:['Número de mesa','Lista de platos pedidos','Estado de cada plato (pedido/en preparación/listo)','Precio de cada plato','Hora del pedido'],
+    prescindibles:['Nombre del mozo que tomó el pedido','Descripción larga del plato','Foto del plato','Historia de pedidos anteriores de esa mesa','Alérgenos (si el sistema no los gestiona)'],
+    justificacion:'Para seguir un pedido necesitamos saber qué mesa pidió qué, en qué estado está cada plato y cuánto cobrar. El resto es información adicional.',
+    solucion:[
+      {tipo:'esencial', dato:'Número de mesa', razon:'Identifica a qué mesa pertenece el pedido; sin esto no se sabe a quién servir.'},
+      {tipo:'esencial', dato:'Lista de platos pedidos', razon:'Define qué hay que preparar y qué incluye la cuenta.'},
+      {tipo:'esencial', dato:'Estado de cada plato', razon:'La cocina y el mozo necesitan saber si el plato está listo o no.'},
+      {tipo:'esencial', dato:'Precio de cada plato', razon:'Necesario para calcular el total de la cuenta.'},
+      {tipo:'esencial', dato:'Hora del pedido', razon:'Permite priorizar pedidos y medir tiempos de espera.'},
+      {tipo:'prescindible', dato:'Foto del plato', razon:'Útil para el menú digital pero no para el seguimiento del pedido.'},
+      {tipo:'prescindible', dato:'Historia de pedidos anteriores', razon:'Podría usarse para estadísticas, pero no es necesaria para atender la mesa actual.'}
+    ],
+    nota:'💡 <b>Reflexión:</b> si el sistema tuviera que gestionar alérgenos, pasarían a ser esenciales. La abstracción correcta depende siempre de los requisitos del sistema.'
+  }
+];
+
+/* ── PILAR 4: ALGORITMOS (drag & drop) ──────────────────────────── */
+// "pasos" está en orden correcto; el alumno los verá desordenados.
+const DATA_P4 = [
+  {
+    id:1,
+    texto:`<strong>Algoritmo para sacar dinero de un cajero automático.</strong><br>
+           Describí la secuencia exacta y ordenada de pasos que sigue un cajero desde que insertás la tarjeta hasta que salís.`,
+    pasos:[
+      'Insertar la tarjeta en el cajero',
+      'Leer y validar los datos de la tarjeta',
+      'Solicitar el número PIN al usuario',
+      'Verificar que el PIN ingresado es correcto',
+      'Mostrar el menú de opciones al usuario',
+      'Seleccionar la operación "Extraer dinero"',
+      'Ingresar el monto a extraer',
+      'Verificar que el saldo disponible es suficiente',
+      'Dispensar el dinero solicitado',
+      'Registrar la transacción y actualizar el saldo',
+      'Ofrecer el comprobante al usuario',
+      'Devolver la tarjeta y finalizar la sesión'
+    ],
+    nota:'💡 <b>Reflexión:</b> el orden importa: verificar el PIN antes de mostrar el menú impide el acceso no autorizado. Un paso fuera de lugar puede crear una vulnerabilidad de seguridad.'
+  },
+  {
+    id:2,
+    texto:`<strong>Algoritmo para enviar un email con archivo adjunto.</strong><br>
+           Describí la secuencia completa de pasos para redactar y enviar un email con un archivo adjunto desde una aplicación de correo.`,
+    pasos:[
+      'Abrir la aplicación de correo electrónico',
+      'Iniciar sesión con usuario y contraseña',
+      'Hacer clic en "Redactar nuevo mensaje"',
+      'Ingresar la dirección de email del destinatario',
+      'Escribir el asunto del mensaje',
+      'Redactar el cuerpo del mensaje',
+      'Adjuntar el archivo desde el sistema de archivos',
+      'Verificar que el archivo adjunto se cargó correctamente',
+      'Revisar el mensaje antes de enviarlo',
+      'Hacer clic en "Enviar"',
+      'Confirmar que el mensaje aparece en la carpeta "Enviados"'
+    ],
+    nota:'💡 <b>Reflexión:</b> verificar que el adjunto se cargó ANTES de enviar evita el clásico error de enviar el email sin el archivo. Los algoritmos deben anticipar errores comunes.'
+  },
+  {
+    id:3,
+    texto:`<strong>Algoritmo para preparar una taza de café con cafetera italiana.</strong><br>
+           Describí en orden todos los pasos necesarios, desde que tenés los ingredientes hasta que el café está servido.`,
+    pasos:[
+      'Desarm la cafetera separando las tres partes',
+      'Llenar el depósito inferior con agua fría hasta la válvula de seguridad',
+      'Colocar el filtro embudo en el depósito inferior',
+      'Poner el café molido en el filtro sin apretar',
+      'Roscar la parte superior de la cafetera firmemente',
+      'Colocar la cafetera sobre el fuego a temperatura media',
+      'Esperar que el café comience a subir a la parte superior',
+      'Retirar la cafetera del fuego cuando el café termina de subir',
+      'Revolver el café en la parte superior',
+      'Servir el café en una taza'
+    ],
+    nota:'💡 <b>Reflexión:</b> llenar el agua ANTES de poner el café es crucial: si ponés el café primero y después abrís para agregar agua, el café se moja. En algoritmos, el orden de los pasos cambia el resultado.'
+  },
+  {
+    id:4,
+    texto:`<strong>Algoritmo para registrar un usuario nuevo en una aplicación web.</strong><br>
+           Describí la secuencia completa desde que el usuario ingresa al formulario hasta que su cuenta queda activa.`,
+    pasos:[
+      'Mostrar el formulario de registro al usuario',
+      'El usuario completa nombre, email y contraseña',
+      'Validar que todos los campos obligatorios estén completos',
+      'Verificar que el email tiene formato válido',
+      'Comprobar que el email no está registrado ya en el sistema',
+      'Verificar que la contraseña cumple los requisitos mínimos de seguridad',
+      'Crear el registro del usuario en la base de datos',
+      'Enviar un email de verificación a la dirección ingresada',
+      'Mostrar mensaje de éxito indicando que revise su email',
+      'El usuario hace clic en el enlace de verificación del email',
+      'Activar la cuenta y redirigir al usuario al login'
+    ],
+    nota:'💡 <b>Reflexión:</b> las validaciones van ANTES de crear el registro. Si creamos el usuario y luego detectamos que el email ya existe, tendríamos que borrarlo. Los algoritmos evitan trabajo innecesario validando primero.'
+  },
+  {
+    id:5,
+    texto:`<strong>Algoritmo para buscar un libro en una biblioteca y llevarlo en préstamo.</strong><br>
+           Describí los pasos que sigue un alumno desde que llega a la biblioteca hasta que sale con el libro.`,
+    pasos:[
+      'Buscar el libro en el catálogo de la biblioteca',
+      'Anotar la ubicación del libro (estante y número)',
+      'Ir al estante y verificar que el libro esté disponible',
+      'Tomar el libro del estante',
+      'Acercarse al mostrador de préstamos',
+      'Presentar el carnet de alumno al bibliotecario',
+      'El bibliotecario registra el préstamo en el sistema',
+      'Firmar el registro de préstamo',
+      'Recibir la fecha límite de devolución',
+      'Salir de la biblioteca con el libro'
+    ],
+    nota:'💡 <b>Reflexión:</b> "verificar que el libro está disponible" va ANTES de tomarlo. Si fuera al mostrador sin el libro y recién ahí descubría que estaba prestado, habría desperdiciado pasos. Los algoritmos eficientes detectan problemas lo antes posible.'
+  }
+];
+
+/* ══════════════════════════════════════════════════════════════════
+   ESTADO GLOBAL
+   ══════════════════════════════════════════════════════════════════ */
+let pilarActual = 1;
+const estado = {
+  1: { problema: null, intentos: [] },
+  2: { problema: null, intentos: [] },
+  3: { problema: null, intentos: [] },
+  4: { problema: null, intentos: [], intentosAlgo: 0 }
+};
+
+/* ══════════════════════════════════════════════════════════════════
+   NAVEGACIÓN ENTRE PILARES
+   ══════════════════════════════════════════════════════════════════ */
+function cambiarPilar(n) {
+  pilarActual = n;
+
+  // Tabs
+  document.querySelectorAll('.pilar-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.pilar-tab[data-pilar="${n}"]`).classList.add('active');
+
+  // Paneles
+  document.querySelectorAll('.pilar-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${n}`).classList.add('active');
+
+  // CSS variable de color activo
+  const colores = { 1:'--p1', 2:'--p2', 3:'--p3', 4:'--p4' };
+  document.documentElement.style.setProperty('--active', `var(${colores[n]})`);
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   CARGA DE PROBLEMAS
+   ══════════════════════════════════════════════════════════════════ */
+function cargarProblema(pilar) {
+  const datasets = { 1: DATA_P1, 2: DATA_P2, 3: DATA_P3, 4: DATA_P4 };
+  const data = datasets[pilar];
+  const actual = estado[pilar].problema;
+  const candidatos = actual ? data.filter(p => p.id !== actual.id) : data;
+  const nuevo = candidatos[Math.floor(Math.random() * candidatos.length)];
+  estado[pilar].problema = nuevo;
+  estado[pilar].intentos = [];
+  if (pilar === 4) estado[4].intentosAlgo = 0;
+
+  document.getElementById(`p${pilar}-problema-texto`).innerHTML = nuevo.texto;
+
+  // Limpiar secciones de resultado/solución/historial
+  ocultarSecciones(pilar);
+
+  // Preparar la entrada según el pilar
+  if (pilar === 1) limpiarP1(false);
+  if (pilar === 2) inicializarP2();
+  if (pilar === 3) limpiarP3(false);
+  if (pilar === 4) inicializarP4();
+}
+
+function ocultarSecciones(pilar) {
+  ['resultados','solucion','historial'].forEach(sec => {
+    const el = document.getElementById(`p${pilar}-${sec}`);
+    if (el) el.style.display = 'none';
+  });
+  if (pilar === 4) {
+    const msg = document.getElementById('p4-resultado-msg');
+    if (msg) { msg.style.display = 'none'; msg.className = 'algo-resultado-msg'; }
+    const btnSol = document.getElementById('p4-btn-sol');
+    if (btnSol) btnSol.style.display = 'none';
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ═══════════════ PILAR 1: DESCOMPOSICIÓN ════════════════════════
+   ══════════════════════════════════════════════════════════════════ */
+const P1_VERBOS_VAGOS = ['hacer','procesar','manejar','gestionar','controlar','tratar','realizar','efectuar','llevar','tener','poner','dar','tomar'];
+const P1_VERBOS_CONTEXTO = ['verificar','validar','comprobar','revisar','chequear','actualizar','modificar','obtener','generar','crear','eliminar'];
+const P1_CONECTORES = [' y ',' además ',' también ',' luego ',' después ',', '];
+const P1_INF_RE = /^[a-záéíóúñü]+[aei]r\b/i;
+
+function addRow(pilar, val='') {
+  const wrapper = document.getElementById(`p${pilar}-rows`);
+  const idx = wrapper.children.length + 1;
+  const row = document.createElement('div');
+  row.className = 'subproblema-row';
+  row.innerHTML = `
+    <span class="row-num">${idx}.</span>
+    <input class="row-input" type="text" placeholder="Ej: calcular el total de gastos por categoría"
+           value="${esc(val)}" onkeydown="if(event.key==='Enter'){event.preventDefault();addRow(${pilar})}"/>
+    <button class="btn-rm" onclick="removeRow(this,${pilar})">×</button>`;
+  wrapper.appendChild(row);
+  renumerarRows(pilar);
+  row.querySelector('input').focus();
+}
+
+function removeRow(btn, pilar) {
+  const w = document.getElementById(`p${pilar}-rows`);
+  if (w.children.length <= 1) return;
+  btn.closest('.subproblema-row').remove();
+  renumerarRows(pilar);
+}
+
+function renumerarRows(pilar) {
+  document.querySelectorAll(`#p${pilar}-rows .row-num`).forEach((el,i)=>el.textContent=`${i+1}.`);
+}
+
+function limpiarP1(addRows=true) {
+  document.getElementById('p1-rows').innerHTML = '';
+  ocultarSecciones(1);
+  estado[1].intentos = [];
+  if (addRows) { addRow(1); addRow(1); addRow(1); }
+}
+
+function evalP1() {
+  const inputs = [...document.querySelectorAll('#p1-rows .row-input')].map(i=>i.value.trim()).filter(Boolean);
+  if (!inputs.length) return alert('Ingresá al menos un subproblema.');
+  const prob = estado[1].problema;
+  const evals = inputs.map((t,i) => evalSubP1(t, i+1, prob));
+  mostrarResultadosP1(evals);
+  registrarIntento(1, evals);
+  if (estado[1].intentos.length >= 3) mostrarSolucion(1);
+}
+
+function evalSubP1(texto, num, prob) {
+  const feedbacks = [];
+  let pen = 0;
+  const low = texto.toLowerCase().trim();
+  const palabras = low.split(/\s+/);
+  const primera = palabras[0] || '';
+
+  if (!P1_INF_RE.test(primera)) {
+    pen += 2;
+    if (/^(el|la|los|las|un|una)/.test(low))
+      feedbacks.push({msg:`Empieza con artículo. Los subproblemas deben iniciar con un <b>verbo en infinitivo</b>.`, sug:`¿Cuál es la acción principal? Reformulá empezando con el verbo.`});
+    else
+      feedbacks.push({msg:`"<b>${primera}</b>" no parece un verbo en infinitivo (no termina en -ar, -er o -ir).`, sug:`Si escribiste un verbo conjugado (ej: "calcula"), usá el infinitivo: <em>"calcular"</em>.`});
+  } else {
+    if (P1_VERBOS_VAGOS.includes(primera)) {
+      pen += 2;
+      feedbacks.push({msg:`"<b>${primera}</b>" es demasiado genérico; no comunica qué hace este paso.`, sug:`¿Qué significa "${primera}" aquí? Usá un verbo más específico.`});
+    }
+    if (P1_VERBOS_CONTEXTO.includes(primera) && palabras.length < 4) {
+      pen += 1;
+      feedbacks.push({msg:`"<b>${primera}</b>" puede ser impreciso si no se especifica qué exactamente.`, sug:`Completá: <em>"${primera} que [condición específica]"</em>`});
+    }
+    if (palabras.length <= 2 && pen === 0) {
+      pen += 1;
+      feedbacks.push({msg:'El subproblema es muy corto y probablemente vago.', sug:'¿Qué dato u objeto involucra esta acción? Agregá más detalle.'});
+    }
+    const tieneConector = P1_CONECTORES.some(c => low.includes(c));
+    if (tieneConector && palabras.length > 8) {
+      pen += 1;
+      feedbacks.push({msg:'Parece tener más de una acción ("y", "además", "luego"…).', sug:'¿Podés dividirlo en dos subproblemas? Cada uno debe describir <b>una sola acción</b>.'});
+    }
+    const hayRel = prob.dominio.some(p => low.includes(p));
+    if (!hayRel && palabras.length > 3 && pen === 0) {
+      pen += 1;
+      feedbacks.push({msg:'No se detectan términos del problema planteado.', sug:'Revisá que el subproblema mencione elementos del contexto.'});
+    }
+  }
+
+  if (pen === 0) {
+    feedbacks.push({msg:'Comienza con verbo en infinitivo claro y tiene precisión adecuada.', sug:null});
+    const tieneConector = P1_CONECTORES.some(c => low.includes(c));
+    if (tieneConector) feedbacks.push({msg:'Nota: podrías dividirlo en dos si lo considerás conveniente.', sug:null});
+  }
+
+  return { num, texto, estado: pen===0?'correcto':pen===1?'ambiguo':'incorrecto', feedbacks };
+}
+
+function mostrarResultadosP1(evals) {
+  const nC = evals.filter(e=>e.estado==='correcto').length;
+  const nA = evals.filter(e=>e.estado==='ambiguo').length;
+  const nI = evals.filter(e=>e.estado==='incorrecto').length;
+  document.getElementById('p1-cnt-c').textContent = nC;
+  document.getElementById('p1-cnt-a').textContent = nA;
+  document.getElementById('p1-cnt-i').textContent = nI;
+
+  const lista = document.getElementById('p1-res-lista');
+  lista.innerHTML = '';
+  const iconos = {correcto:'✅',ambiguo:'⚠️',incorrecto:'❌'};
+  const etiq   = {correcto:'Correcto',ambiguo:'Ambiguo',incorrecto:'Incorrecto'};
+  evals.forEach((ev,idx) => {
+    const d = document.createElement('div');
+    d.className = `resultado-item ${ev.estado}`;
+    d.style.animationDelay = `${idx*60}ms`;
+    const fbH = ev.feedbacks.map(f=>`<li>${f.msg}</li>${f.sug?`<li>💡 ${f.sug}</li>`:''}`).join('');
+    d.innerHTML = `<div class="res-header">
+      <span class="res-icon">${iconos[ev.estado]}</span>
+      <span class="res-txt">${esc(ev.texto)}</span>
+      <span class="res-lbl">#${ev.num} · ${etiq[ev.estado]}</span>
+    </div><ul class="fb-lista">${fbH}</ul>`;
+    lista.appendChild(d);
+  });
+
+  const puntaje = calcPuntaje(evals);
+  const nota    = calcNota(puntaje);
+  mostrarNota('p1', nota);
+
+  document.getElementById('p1-resultados').style.display = 'block';
+  document.getElementById('p1-resultados').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ═══════════════ PILAR 2: RECONOCIMIENTO DE PATRONES ════════════
+   ══════════════════════════════════════════════════════════════════ */
+function inicializarP2() {
+  // Renderizar el grid de opciones
+  const grid = document.getElementById('p2-opciones-grid');
+  grid.innerHTML = PATRONES_DISPONIBLES.map(p=>`
+    <div class="patron-opcion" id="po-${p.id}" onclick="togglePatron('${p.id}')">
+      <span class="po-check">✓</span>
+      <div>
+        <div style="font-weight:600;color:var(--text);margin-bottom:2px">${p.texto}</div>
+        <div style="font-size:12px">${p.desc}</div>
+      </div>
+    </div>`).join('');
+  document.getElementById('p2-descripcion').value = '';
+  ocultarSecciones(2);
+  estado[2].intentos = [];
+}
+
+function togglePatron(id) {
+  document.getElementById(`po-${id}`).classList.toggle('selected');
+}
+
+function limpiarP2() {
+  document.getElementById('p2-descripcion').value = '';
+  document.querySelectorAll('.patron-opcion').forEach(el=>{
+    el.classList.remove('selected','correcto-sel','incorrecto-sel','deberia-sel');
+  });
+  ocultarSecciones(2);
+}
+
+function evalP2() {
+  const prob = estado[2].problema;
+  const desc = document.getElementById('p2-descripcion').value.trim();
+  const seleccionados = [...document.querySelectorAll('.patron-opcion.selected')].map(el=>el.id.replace('po-',''));
+
+  if (!desc && seleccionados.length === 0) return alert('Describí los patrones y/o seleccioná al menos uno.');
+
+  const correctos = prob.correctos;
+  const tp = seleccionados.filter(s => correctos.includes(s)).length;  // verdaderos positivos
+  const fp = seleccionados.filter(s => !correctos.includes(s)).length; // falsos positivos
+  const fn = correctos.filter(s => !seleccionados.includes(s)).length; // falsos negativos
+
+  // Colorear las opciones
+  document.querySelectorAll('.patron-opcion').forEach(el => {
+    el.classList.remove('correcto-sel','incorrecto-sel','deberia-sel');
+    const id = el.id.replace('po-','');
+    const sel = seleccionados.includes(id);
+    const corr = correctos.includes(id);
+    if (sel && corr)  el.classList.add('correcto-sel');
+    if (sel && !corr) el.classList.add('incorrecto-sel');
+    if (!sel && corr) el.classList.add('deberia-sel');
+  });
+
+  // Evaluar descripción (heurística simple: longitud y palabras clave)
+  const descOk = desc.length >= 40;
+  const descFeedback = descOk
+    ? '✅ La descripción tiene suficiente desarrollo.'
+    : desc.length === 0
+      ? '❌ No escribiste ninguna descripción.'
+      : '⚠️ La descripción es muy breve. Intentá explicar con más detalle qué repeticiones o regularidades ves.';
+
+  // Score total
+  const score = (tp / Math.max(correctos.length, 1)) * 60
+              + (fp === 0 ? 20 : Math.max(0, 20 - fp * 7))
+              + (descOk ? 20 : desc.length > 0 ? 10 : 0);
+
+  const nota = score >= 85 ? 'A' : score >= 70 ? 'B' : score >= 50 ? 'C' : score >= 30 ? 'D' : 'F';
+
+  // Construir HTML del resultado
+  const resBody = document.getElementById('p2-res-body');
+  resBody.innerHTML = `
+    <div class="resultado-item ${descOk?'correcto':desc.length>0?'ambiguo':'incorrecto'}" style="margin-bottom:14px">
+      <div class="res-header"><span class="res-icon">${descOk?'✅':desc.length>0?'⚠️':'❌'}</span>
+        <span class="res-txt">Descripción libre</span></div>
+      <ul class="fb-lista"><li>${descFeedback}</li>
+        ${!descOk && desc.length > 0 ? '<li>💡 Describí qué se repite, qué cambia de estado, qué se valida, etc.</li>' : ''}</ul>
+    </div>
+    <div style="margin-bottom:12px;font-size:13px;color:var(--soft)">
+      <b style="color:var(--text)">Selección de patrones:</b>
+      <span style="color:var(--green)"> ✅ ${tp} correctos</span> ·
+      <span style="color:var(--yellow)"> ⚠️ ${fn} que faltaron</span> ·
+      <span style="color:var(--red)"> ❌ ${fp} incorrectos</span>
+    </div>
+    <div style="font-size:12.5px;color:var(--muted);padding:10px 14px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
+      🟨 <b style="color:var(--yellow)">Amarillo</b> = debería estar seleccionado &nbsp;·&nbsp;
+      🟥 <b style="color:var(--red)">Rojo</b> = seleccionado incorrectamente &nbsp;·&nbsp;
+      🟩 <b style="color:var(--green)">Verde</b> = correcto
+    </div>`;
+
+  mostrarNota('p2', nota);
+  document.getElementById('p2-resultados').style.display = 'block';
+  document.getElementById('p2-resultados').scrollIntoView({behavior:'smooth',block:'start'});
+
+  registrarIntento2(nota);
+  if (estado[2].intentos.length >= 3) mostrarSolucion(2);
+}
+
+function registrarIntento2(nota) {
+  estado[2].intentos.push({ numero: estado[2].intentos.length+1, nota });
+  if (estado[2].intentos.length >= 2) {
+    document.getElementById('p2-historial').style.display = 'block';
+    document.getElementById('p2-hist-lista').innerHTML = estado[2].intentos.map(int=>`
+      <div class="hist-item">
+        <span>Intento #${int.numero}</span>
+        <span class="hist-nota" style="color:${colorNota(int.nota)}">${int.nota}</span>
+      </div>`).join('');
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ═══════════════ PILAR 3: ABSTRACCIÓN ═══════════════════════════
+   ══════════════════════════════════════════════════════════════════ */
+function addRowGen(wrapperId, placeholder) {
+  const wrapper = document.getElementById(wrapperId);
+  const idx = wrapper.children.length + 1;
+  const row = document.createElement('div');
+  row.className = 'subproblema-row';
+  row.innerHTML = `
+    <span class="row-num">${idx}.</span>
+    <input class="row-input" type="text" placeholder="${placeholder}"
+           onkeydown="if(event.key==='Enter'){event.preventDefault();addRowGen('${wrapperId}','${placeholder}')}"/>
+    <button class="btn-rm" onclick="removeRowGen(this,'${wrapperId}')">×</button>`;
+  wrapper.appendChild(row);
+  renumerarRowsGen(wrapperId);
+  row.querySelector('input').focus();
+}
+
+function removeRowGen(btn, wrapperId) {
+  const w = document.getElementById(wrapperId);
+  if (w.children.length <= 1) return;
+  btn.closest('.subproblema-row').remove();
+  renumerarRowsGen(wrapperId);
+}
+
+function renumerarRowsGen(wrapperId) {
+  document.querySelectorAll(`#${wrapperId} .row-num`).forEach((el,i)=>el.textContent=`${i+1}.`);
+}
+
+function limpiarP3(addRows=true) {
+  document.getElementById('p3-esenciales-rows').innerHTML = '';
+  document.getElementById('p3-ignorar-rows').innerHTML = '';
+  document.getElementById('p3-justificacion').value = '';
+  ocultarSecciones(3);
+  estado[3].intentos = [];
+  if (addRows) {
+    addRowGen('p3-esenciales-rows','Ej: nombre del usuario, fecha del pedido...');
+    addRowGen('p3-esenciales-rows','Ej: nombre del usuario, fecha del pedido...');
+    addRowGen('p3-ignorar-rows','Ej: el color del botón, el nombre del programador...');
+    addRowGen('p3-ignorar-rows','Ej: el color del botón, el nombre del programador...');
+  }
+}
+
+function evalP3() {
+  const prob = estado[3].problema;
+  const esenciales = [...document.querySelectorAll('#p3-esenciales-rows .row-input')].map(i=>i.value.trim()).filter(Boolean);
+  const ignorar    = [...document.querySelectorAll('#p3-ignorar-rows .row-input')].map(i=>i.value.trim()).filter(Boolean);
+  const justif     = document.getElementById('p3-justificacion').value.trim();
+
+  if (!esenciales.length && !ignorar.length) return alert('Completá al menos una sección.');
+
+  // Heurística: contar coincidencias con palabras clave de la solución
+  const esencialesRef  = prob.esenciales.map(e => e.toLowerCase());
+  const prescindiblesRef = prob.prescindibles.map(e => e.toLowerCase());
+
+  function matchScore(inputs, ref) {
+    return inputs.filter(inp => ref.some(r => r.split(/[\s,/]/)[0].split(' ').some(w => w.length>3 && inp.toLowerCase().includes(w)))).length;
+  }
+
+  const scoreE = esenciales.length > 0 ? Math.min(matchScore(esenciales, esencialesRef) / Math.max(esencialesRef.length,1), 1) : 0;
+  const scoreI = ignorar.length > 0 ? Math.min(matchScore(ignorar, prescindiblesRef) / Math.max(prescindiblesRef.length,1), 1) : 0;
+  const scoreJ = justif.length >= 50 ? 1 : justif.length > 0 ? 0.5 : 0;
+
+  const puntaje = (scoreE * 40) + (scoreI * 30) + (scoreJ * 30);
+  const nota    = puntaje >= 75 ? 'A' : puntaje >= 55 ? 'B' : puntaje >= 35 ? 'C' : puntaje >= 15 ? 'D' : 'F';
+
+  const evalE = esenciales.length >= 3 && scoreE >= 0.3 ? 'correcto' : esenciales.length > 0 ? 'ambiguo' : 'incorrecto';
+  const evalI = ignorar.length >= 2 && scoreI >= 0.2 ? 'correcto' : ignorar.length > 0 ? 'ambiguo' : 'incorrecto';
+  const evalJ = justif.length >= 50 ? 'correcto' : justif.length > 10 ? 'ambiguo' : 'incorrecto';
+
+  const fbE = evalE==='correcto' ? 'Identificaste datos esenciales con buena cobertura.' :
+              evalE==='ambiguo'  ? 'Algunos datos esenciales podrían estar más justificados o faltan algunos.' :
+                                   'Debés identificar los datos que el sistema no puede funcionar sin ellos.';
+  const fbI = evalI==='correcto' ? 'Identificaste correctamente datos que pueden ignorarse.' :
+              evalI==='ambiguo'  ? 'Algunos de estos datos podrían ser más importantes de lo que creés. Justificá cada elección.' :
+                                   'Incluí al menos algunos datos que no son necesarios para el funcionamiento del sistema.';
+  const fbJ = evalJ==='correcto' ? 'La justificación explica con claridad el criterio de abstracción.' :
+              evalJ==='ambiguo'  ? 'La justificación es corta. Desarrollá más el razonamiento.' :
+                                   'La justificación es necesaria: explicá POR QUÉ elegiste esos datos y no otros.';
+
+  const iconos = {correcto:'✅',ambiguo:'⚠️',incorrecto:'❌'};
+  document.getElementById('p3-res-body').innerHTML = `
+    <div class="resultado-item ${evalE}" style="margin-bottom:10px">
+      <div class="res-header"><span class="res-icon">${iconos[evalE]}</span><span class="res-txt">Datos esenciales</span></div>
+      <ul class="fb-lista"><li>${fbE}</li>${evalE!=='correcto'?'<li>💡 Pensá: ¿qué pasa si este dato no está? Si el sistema no puede funcionar, es esencial.</li>':''}</ul>
+    </div>
+    <div class="resultado-item ${evalI}" style="margin-bottom:10px">
+      <div class="res-header"><span class="res-icon">${iconos[evalI]}</span><span class="res-txt">Datos a ignorar</span></div>
+      <ul class="fb-lista"><li>${fbI}</li></ul>
+    </div>
+    <div class="resultado-item ${evalJ}">
+      <div class="res-header"><span class="res-icon">${iconos[evalJ]}</span><span class="res-txt">Justificación</span></div>
+      <ul class="fb-lista"><li>${fbJ}</li></ul>
+    </div>`;
+
+  mostrarNota('p3', nota);
+  document.getElementById('p3-resultados').style.display = 'block';
+  document.getElementById('p3-resultados').scrollIntoView({behavior:'smooth',block:'start'});
+
+  registrarIntentoSimple(3, nota);
+  if (estado[3].intentos.length >= 3) mostrarSolucion(3);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ═══════════════ PILAR 4: ALGORITMOS (DRAG & DROP) ══════════════
+   ══════════════════════════════════════════════════════════════════ */
+let draggedEl = null;
+let dragSource = null; // 'pool' | 'sequence'
+
+function inicializarP4() {
+  const prob = estado[4].problema;
+  const pool = document.getElementById('p4-pool');
+  const seq  = document.getElementById('p4-sequence');
+  pool.innerHTML = '';
+  seq.innerHTML  = '';
+  estado[4].intentosAlgo = 0;
+  ocultarSecciones(4);
+
+  // Mezclar los pasos
+  const mezclados = [...prob.pasos].sort(() => Math.random() - 0.5);
+
+  mezclados.forEach((paso, i) => {
+    const el = crearStepEl(paso, i);
+    pool.appendChild(el);
+  });
+
+  actualizarEmpties();
+}
+
+function crearStepEl(texto, idx) {
+  const el = document.createElement('div');
+  el.className = 'algo-step';
+  el.draggable = true;
+  el.dataset.texto = texto;
+  el.innerHTML = `<span class="step-handle">⠿</span><span class="step-num">${idx+1}</span><span>${esc(texto)}</span>`;
+  el.addEventListener('dragstart', onDragStart);
+  el.addEventListener('dragend',   onDragEnd);
+  return el;
+}
+
+function onDragStart(e) {
+  draggedEl = e.currentTarget;
+  dragSource = draggedEl.closest('#p4-pool') ? 'pool' : 'sequence';
+  draggedEl.style.opacity = '.4';
+}
+function onDragEnd(e) {
+  draggedEl.style.opacity = '1';
+  draggedEl = null;
+  actualizarNumerosSeq();
+  actualizarEmpties();
+}
+function dragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+function dragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+function dropTo(e, destino) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (!draggedEl) return;
+
+  const dest = document.getElementById(destino === 'pool' ? 'p4-pool' : 'p4-sequence');
+
+  // Si se suelta sobre un step existente, insertar antes de él
+  const target = e.target.closest('.algo-step');
+  if (target && target !== draggedEl && target.parentElement === dest) {
+    dest.insertBefore(draggedEl, target);
+  } else {
+    dest.appendChild(draggedEl);
+  }
+  actualizarNumerosSeq();
+  actualizarEmpties();
+}
+
+function actualizarNumerosSeq() {
+  document.querySelectorAll('#p4-sequence .algo-step').forEach((el,i) => {
+    el.querySelector('.step-num').textContent = i+1;
+  });
+}
+
+function actualizarEmpties() {
+  const pool = document.getElementById('p4-pool');
+  const seq  = document.getElementById('p4-sequence');
+  const poolEmpty = document.getElementById('p4-pool-empty');
+  const seqEmpty  = document.getElementById('p4-seq-empty');
+  if (poolEmpty) poolEmpty.style.display = pool.querySelectorAll('.algo-step').length ? 'none' : 'block';
+  if (seqEmpty)  seqEmpty.style.display  = seq.querySelectorAll('.algo-step').length ? 'none' : 'block';
+}
+
+function resetP4() {
+  inicializarP4();
+  document.getElementById('p4-resultado-msg').style.display = 'none';
+  document.getElementById('p4-btn-sol').style.display = 'none';
+}
+
+function evalP4() {
+  const prob = estado[4].problema;
+  const secSteps = [...document.querySelectorAll('#p4-sequence .algo-step')];
+  if (secSteps.length === 0) return alert('Arrastrá al menos un paso a la secuencia.');
+
+  const respuesta = secSteps.map(el => el.dataset.texto);
+  const correcta  = prob.pasos;
+
+  // Calcular posiciones correctas
+  let aciertos = 0;
+  secSteps.forEach((el, i) => {
+    el.classList.remove('correcto','incorrecto');
+    if (correcta[i] && el.dataset.texto === correcta[i]) {
+      el.classList.add('correcto');
+      aciertos++;
+    } else {
+      el.classList.add('incorrecto');
+    }
+  });
+
+  estado[4].intentosAlgo++;
+  const total = correcta.length;
+  const porcentaje = Math.round((aciertos / total) * 100);
+
+  const msg = document.getElementById('p4-resultado-msg');
+  msg.style.display = 'block';
+
+  if (aciertos === total && secSteps.length === total) {
+    msg.className = 'algo-resultado-msg visible perfecto';
+    msg.innerHTML = `🎉 ¡Perfecto! Todos los pasos en el orden correcto. (${aciertos}/${total})`;
+  } else if (porcentaje >= 60) {
+    msg.className = 'algo-resultado-msg visible casi';
+    msg.innerHTML = `⚠️ Casi: ${aciertos} de ${total} pasos en la posición correcta (${porcentaje}%). Los pasos en rojo están fuera de lugar.`;
+  } else {
+    msg.className = 'algo-resultado-msg visible error';
+    msg.innerHTML = `❌ ${aciertos} de ${total} pasos en la posición correcta (${porcentaje}%). Revisá el orden — los rojos están fuera de lugar.`;
+  }
+
+  // Registrar historial
+  const nota = porcentaje >= 90 ? 'A' : porcentaje >= 75 ? 'B' : porcentaje >= 55 ? 'C' : porcentaje >= 35 ? 'D' : 'F';
+  registrarIntentoSimple(4, nota);
+
+  // Mostrar botón de solución a partir del 3er intento o si no es perfecto
+  if (estado[4].intentosAlgo >= 3 && aciertos < total) {
+    document.getElementById('p4-btn-sol').style.display = 'inline-flex';
+  }
+
+  msg.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function verSolucionP4() {
+  const prob = estado[4].problema;
+  const lista = document.getElementById('p4-sol-lista');
+  lista.innerHTML = prob.pasos.map((paso, i) => `
+    <div class="sol-item" style="animation-delay:${i*60}ms">
+      <span class="sol-num">${i+1}</span>
+      <div class="sol-txt">✅ ${esc(paso)}</div>
+    </div>`).join('');
+  document.getElementById('p4-sol-nota').innerHTML = prob.nota;
+  document.getElementById('p4-solucion').style.display = 'block';
+  document.getElementById('p4-solucion').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   SOLUCIÓN MODELO — Pilares 1, 2, 3
+   ══════════════════════════════════════════════════════════════════ */
+function mostrarSolucion(pilar) {
+  const secId = `p${pilar}-solucion`;
+  const sec = document.getElementById(secId);
+  if (sec.style.display === 'block') return; // ya mostrada
+
+  const prob = estado[pilar].problema;
+
+  if (pilar === 1) {
+    document.getElementById('p1-sol-lista').innerHTML = prob.solucion.map((s,i)=>`
+      <div class="sol-item" style="animation-delay:${i*80}ms">
+        <span class="sol-num">${i+1}</span>
+        <div><div class="sol-txt">✅ ${esc(s.texto)}</div><div class="sol-razon">${s.razon}</div></div>
+      </div>`).join('');
+    document.getElementById('p1-sol-nota').innerHTML = prob.nota;
+  }
+
+  if (pilar === 2) {
+    document.getElementById('p2-sol-body').innerHTML = prob.solucion.map((s,i)=>`
+      <div class="sol-item" style="animation-delay:${i*80}ms">
+        <span class="sol-num">${i+1}</span>
+        <div>
+          <div class="sol-txt">✅ ${esc(s.patron)}</div>
+          <div class="sol-razon">${s.razon}</div>
+        </div>
+      </div>`).join('');
+    document.getElementById('p2-sol-nota').innerHTML = prob.nota;
+  }
+
+  if (pilar === 3) {
+    const esenc = prob.solucion.filter(s=>s.tipo==='esencial');
+    const presc = prob.solucion.filter(s=>s.tipo==='prescindible');
+    document.getElementById('p3-sol-body').innerHTML = `
+      <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin-bottom:8px">Datos esenciales</div>
+      ${esenc.map((s,i)=>`<div class="sol-item" style="animation-delay:${i*60}ms">
+        <span class="sol-num">E${i+1}</span>
+        <div><div class="sol-txt">✅ ${esc(s.dato)}</div><div class="sol-razon">${s.razon}</div></div>
+      </div>`).join('')}
+      <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px">Datos prescindibles</div>
+      ${presc.map((s,i)=>`<div class="sol-item" style="animation-delay:${(esenc.length+i)*60}ms;background:#12152a;border-color:var(--border)">
+        <span class="sol-num" style="color:var(--muted);background:#1a1f33">P${i+1}</span>
+        <div><div class="sol-txt" style="color:var(--muted)">✗ ${esc(s.dato)}</div><div class="sol-razon">${s.razon}</div></div>
+      </div>`).join('')}`;
+    document.getElementById('p3-sol-nota').innerHTML = prob.nota;
+  }
+
+  sec.style.display = 'block';
+  setTimeout(()=>sec.scrollIntoView({behavior:'smooth',block:'start'}), 200);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   HELPERS COMPARTIDOS
+   ══════════════════════════════════════════════════════════════════ */
+function calcPuntaje(evals) {
+  const suma = evals.reduce((a,e) => a + (e.estado==='correcto'?2:e.estado==='ambiguo'?1:0), 0);
+  return evals.length ? (suma / (evals.length * 2)) * 100 : 0;
+}
+
+function calcNota(p) {
+  return p >= 90 ? 'A' : p >= 75 ? 'B' : p >= 55 ? 'C' : p >= 35 ? 'D' : 'F';
+}
+
+const NOTAS_CONFIG = {
+  A:{ titulo:'¡Excelente!', desc:'Muy bien logrado. Todos los criterios cubiertos.' },
+  B:{ titulo:'Muy bien',    desc:'La mayoría de los puntos están bien. Revisá los detalles.' },
+  C:{ titulo:'Aceptable',   desc:'Hay aspectos que mejorar. Leé el feedback y volvé a intentar.' },
+  D:{ titulo:'Para revisar',desc:'Varios puntos necesitan atención. Releé los conceptos clave.' },
+  F:{ titulo:'Intentá de nuevo', desc:'La respuesta tiene problemas importantes. No te rindas.' }
+};
+
+function mostrarNota(prefix, nota) {
+  const cfg = NOTAS_CONFIG[nota];
+  const circle = document.getElementById(`${prefix}-nota-circle`);
+  circle.textContent = nota;
+  circle.className = `nota-circle nc-${nota}`;
+  document.getElementById(`${prefix}-nota-titulo`).textContent = cfg.titulo;
+  document.getElementById(`${prefix}-nota-desc`).textContent   = cfg.desc;
+}
+
+function registrarIntento(pilar, evals) {
+  const puntaje = calcPuntaje(evals);
+  const nota    = calcNota(puntaje);
+  estado[pilar].intentos.push({ numero: estado[pilar].intentos.length+1, nota, cantidad: evals.length });
+  actualizarHistorial(pilar);
+}
+
+function registrarIntentoSimple(pilar, nota) {
+  estado[pilar].intentos.push({ numero: estado[pilar].intentos.length+1, nota });
+  actualizarHistorial(pilar);
+}
+
+function actualizarHistorial(pilar) {
+  if (estado[pilar].intentos.length < 2) return;
+  const h = document.getElementById(`p${pilar}-historial`);
+  h.style.display = 'block';
+  document.getElementById(`p${pilar}-hist-lista`).innerHTML = estado[pilar].intentos.map(int=>`
+    <div class="hist-item">
+      <span>Intento #${int.numero}${int.cantidad?' · '+int.cantidad+' ítem'+(int.cantidad!==1?'s':''):''}</span>
+      <span class="hist-nota" style="color:${colorNota(int.nota)}">${int.nota}</span>
+    </div>`).join('');
+}
+
+function colorNota(n) {
+  return {A:'#34d399',B:'#86efac',C:'#fbbf24',D:'#fca000',F:'#f87171'}[n] || '#7a7f99';
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   INICIO
+   ══════════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  // Cargar el primer problema de cada pilar
+  [1,2,3,4].forEach(p => cargarProblema(p));
+
+  // Inicializar las filas de entrada para pilar 1 y 3
+  limpiarP1(true);
+  limpiarP3(true);
+
+  // Mostrar panel 1 por defecto
+  cambiarPilar(1);
+});
+</script>
+</body>
+</html>
