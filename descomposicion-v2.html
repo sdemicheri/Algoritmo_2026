@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  CORRECTOR DE DESCOMPOSICIÓN — v2                               ║
+  ║  Pensamiento Computacional                                       ║
+  ║                                                                  ║
+  ║  NOVEDADES v2:                                                   ║
+  ║  • Pantalla de bienvenida con nombre del alumno                 ║
+  ║  • 15 problemas con niveles: Fácil / Medio / Difícil            ║
+  ║  • Integración con Google Sheets vía Apps Script                ║
+  ║  • Detección de "trampa" (3 intentos intencionalmente fallidos) ║
+  ║                                                                  ║
+  ║  CONFIGURACIÓN REQUERIDA (solo una vez):                        ║
+  ║  1. Seguir la guía en el archivo INSTRUCCIONES-SHEETS.md       ║
+  ║  2. Pegar la URL del Web App en la variable SHEETS_URL abajo   ║
+  ╚══════════════════════════════════════════════════════════════════╝
+-->
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Descomposición de Problemas · Pensamiento Computacional</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #0f1117;
+      --surface:   #181b25;
+      --card:      #1e2230;
+      --border:    #2a2f42;
+      --text:      #e8eaf0;
+      --muted:     #7a7f99;
+      --accent:    #5b8dee;
+      --green:     #34d399; --green-bg:  #0d2e22; --green-bdr: #1a5c3f;
+      --yellow:    #fbbf24; --yellow-bg: #2a2000; --yellow-bdr:#4a3800;
+      --red:       #f87171; --red-bg:    #2e0d0d; --red-bdr:   #5c1a1a;
+      --easy:      #34d399; --easy-bg:   #0d2e22; --easy-bdr:  #1a5c3f;
+      --med:       #fbbf24; --med-bg:    #2a2000; --med-bdr:   #4a3800;
+      --hard:      #f87171; --hard-bg:   #2e0d0d; --hard-bdr:  #5c1a1a;
+      --radius: 12px; --radius-sm: 8px;
+      --shadow: 0 4px 24px rgba(0,0,0,.45);
+      --font-display: 'Syne', sans-serif;
+      --font-body:    'DM Sans', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; padding: 0 0 60px; font-size: 15px; line-height: 1.6;
+    }
+
+    /* ── PANTALLA DE BIENVENIDA ─────────────────────────── */
+    #welcome-screen {
+      position: fixed; inset: 0; z-index: 100;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .welcome-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 40px 36px;
+      max-width: 480px; width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+      text-align: center;
+      animation: welcomeIn .4s ease;
+    }
+    @keyframes welcomeIn {
+      from { opacity:0; transform: translateY(20px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    .welcome-box .wicon { font-size: 48px; margin-bottom: 16px; display: block; }
+    .welcome-box h2 {
+      font-family: var(--font-display); font-size: 26px; font-weight: 800;
+      color: #fff; letter-spacing: -.02em; margin-bottom: 8px;
+    }
+    .welcome-box h2 span { color: var(--accent); }
+    .welcome-box p { color: var(--muted); font-size: 14px; margin-bottom: 28px; line-height: 1.6; }
+    .welcome-input {
+      width: 100%; background: var(--surface);
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      padding: 12px 16px; color: var(--text);
+      font-family: var(--font-body); font-size: 16px; outline: none;
+      transition: border-color .2s; margin-bottom: 14px; text-align: center;
+    }
+    .welcome-input::placeholder { color: #444860; }
+    .welcome-input:focus { border-color: var(--accent); }
+    .welcome-input.error { border-color: var(--red); animation: shake .3s; }
+    @keyframes shake {
+      0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)}
+    }
+    .welcome-error { color: var(--red); font-size: 13px; margin-top: -8px; margin-bottom: 12px; }
+    .welcome-btn {
+      width: 100%; padding: 13px; border-radius: var(--radius-sm);
+      border: none; cursor: pointer; background: var(--accent); color: #fff;
+      font-family: var(--font-body); font-size: 15px; font-weight: 500;
+      transition: all .18s;
+    }
+    .welcome-btn:hover { background: #7aa5f5; transform: translateY(-1px); }
+    .welcome-meta {
+      margin-top: 20px; font-size: 12px; color: var(--muted);
+      border-top: 1px solid var(--border); padding-top: 16px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+
+    /* ── HEADER ────────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, #12152280 0%, #1a1f3380 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 24px 24px; text-align: center; position: relative; overflow: hidden;
+    }
+    header::before {
+      content:''; position:absolute; inset:0;
+      background: radial-gradient(ellipse 60% 80% at 50% -20%, #5b8dee22, transparent);
+      pointer-events:none;
+    }
+    .header-badge {
+      display: inline-block; background: #5b8dee22; color: var(--accent);
+      border: 1px solid #5b8dee44; border-radius: 20px;
+      font-size: 11px; font-weight: 500; letter-spacing: .08em;
+      text-transform: uppercase; padding: 4px 12px; margin-bottom: 10px;
+    }
+    header h1 {
+      font-family: var(--font-display); font-size: clamp(20px, 4vw, 30px);
+      font-weight: 800; letter-spacing: -.02em; color: #fff;
+    }
+    header h1 span { color: var(--accent); }
+    .header-alumno {
+      margin-top: 8px; font-size: 13px; color: var(--muted);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .alumno-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #5b8dee18; color: var(--accent);
+      border: 1px solid #5b8dee33; border-radius: 20px;
+      padding: 3px 12px 3px 8px; font-size: 13px; font-weight: 500;
+    }
+    .alumno-chip button {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-size: 14px; padding: 0 0 0 4px; line-height: 1;
+      transition: color .15s;
+    }
+    .alumno-chip button:hover { color: var(--red); }
+
+    /* ── BARRA DE DIFICULTAD ─────────────────────────── */
+    .dificultad-bar {
+      display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap;
+    }
+    .dif-btn {
+      padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); cursor: pointer;
+      font-family: var(--font-body); font-size: 12px; font-weight: 500;
+      transition: all .18s; letter-spacing: .03em;
+    }
+    .dif-btn.active-easy  { background: var(--easy-bg);  color: var(--easy);  border-color: var(--easy-bdr);  }
+    .dif-btn.active-medio { background: var(--med-bg);   color: var(--med);   border-color: var(--med-bdr);   }
+    .dif-btn.active-dificil{ background: var(--hard-bg); color: var(--hard);  border-color: var(--hard-bdr);  }
+    .dif-btn:not([class*="active"]):hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── BADGE DE DIFICULTAD EN EL PROBLEMA ─────────── */
+    .dif-badge {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 6px; margin-bottom: 10px;
+    }
+    .dif-badge.facil   { background: var(--easy-bg);  color: var(--easy);  border: 1px solid var(--easy-bdr); }
+    .dif-badge.medio   { background: var(--med-bg);   color: var(--med);   border: 1px solid var(--med-bdr); }
+    .dif-badge.dificil { background: var(--hard-bg);  color: var(--hard);  border: 1px solid var(--hard-bdr); }
+
+    /* ── MAIN ────────────────────────────────────────── */
+    main { max-width: 780px; margin: 28px auto 0; padding: 0 20px; display: flex; flex-direction: column; gap: 20px; }
+
+    /* ── GUÍA RÁPIDA ─────────────────────────────────── */
+    .tip-bar {
+      background: #1a1f33; border: 1px solid #2a3050;
+      border-radius: var(--radius-sm); padding: 14px 18px;
+      display: flex; gap: 20px; flex-wrap: wrap;
+    }
+    .tip-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--muted); flex: 1 1 200px; }
+    .tip-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .tip-item b { color: var(--text); }
+
+    /* ── CARDS ────────────────────────────────────────── */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-family: var(--font-display); font-size: 13px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+      margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .card-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block; }
+
+    #problema-texto { font-size: 15.5px; color: var(--text); line-height: 1.7; font-weight: 300; }
+    #problema-texto strong { color: #fff; font-weight: 500; }
+    .problema-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; align-items: center; }
+
+    /* ── INPUTS ────────────────────────────────────────── */
+    #subproblemas-wrapper { display: flex; flex-direction: column; gap: 8px; }
+    .subproblema-row { display: flex; gap: 8px; align-items: center; animation: slideIn .2s ease; }
+    @keyframes slideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+    .subproblema-num { font-family: var(--font-display); font-size: 12px; color: var(--muted); width: 22px; flex-shrink: 0; text-align: right; }
+    .subproblema-input {
+      flex: 1; background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 14px; color: var(--text);
+      font-family: var(--font-body); font-size: 14.5px; outline: none; transition: border-color .2s;
+    }
+    .subproblema-input::placeholder { color: #444860; }
+    .subproblema-input:focus { border-color: var(--accent); }
+    .btn-remove {
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      border-radius: 6px; width: 30px; height: 30px; cursor: pointer;
+      font-size: 16px; display: flex; align-items: center; justify-content: center;
+      transition: all .15s; flex-shrink: 0;
+    }
+    .btn-remove:hover { border-color: var(--red); color: var(--red); }
+    .entry-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+
+    /* ── BOTONES ─────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: var(--radius-sm); border: none; cursor: pointer;
+      font-family: var(--font-body); font-size: 14px; font-weight: 500; transition: all .18s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #7aa5f5; transform: translateY(-1px); }
+    .btn-secondary { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-ghost { background: transparent; color: var(--muted); border: none; padding: 9px 10px; font-size: 13px; }
+    .btn-ghost:hover { color: var(--text); }
+
+    /* ── RESULTADOS ──────────────────────────────────── */
+    #resultados-section { display: none; }
+    #resultados-section.visible { display: block; }
+    .resumen-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .resumen-pill {
+      display: flex; align-items: center; gap: 8px; padding: 8px 16px;
+      border-radius: 20px; font-size: 13px; font-weight: 500; flex: 1 1 120px; justify-content: center;
+    }
+    .resumen-pill.verde  { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-bdr); }
+    .resumen-pill.ambar  { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-bdr); }
+    .resumen-pill.rojo   { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-bdr); }
+    .resumen-pill .num { font-family: var(--font-display); font-size: 18px; font-weight: 800; }
+    .resultado-item {
+      border-radius: var(--radius-sm); padding: 16px 18px; margin-bottom: 10px;
+      border-left: 4px solid; animation: fadeUp .3s ease both;
+    }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .resultado-item.correcto   { background: var(--green-bg);  border-color: var(--green); }
+    .resultado-item.ambiguo    { background: var(--yellow-bg); border-color: var(--yellow); }
+    .resultado-item.incorrecto { background: var(--red-bg);    border-color: var(--red); }
+    .resultado-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+    .resultado-icono { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+    .resultado-texto { font-size: 15px; font-weight: 500; color: var(--text); line-height: 1.4; }
+    .resultado-num { font-size: 11px; color: var(--muted); margin-left: auto; flex-shrink: 0; padding-top: 3px; }
+    .feedback-lista { list-style: none; display: flex; flex-direction: column; gap: 5px; margin-top: 6px; padding-left: 27px; }
+    .feedback-lista li { font-size: 13.5px; color: var(--muted); line-height: 1.5; position: relative; }
+    .feedback-lista li::before { content:'→'; position:absolute; left:-18px; color:var(--accent); font-size:12px; }
+    .feedback-lista li b { color: var(--text); font-weight: 500; }
+    .feedback-lista li em { color: var(--yellow); font-style: normal; font-weight: 500; }
+    .nota-final {
+      margin-top: 20px; padding: 18px 20px; background: #12152a;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    }
+    .nota-circle {
+      width: 56px; height: 56px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 20px; font-weight: 800; flex-shrink: 0;
+    }
+    .nota-circle.A { background:#0d2e22; color:var(--green);  border:2px solid var(--green-bdr); }
+    .nota-circle.B { background:#1a2a1a; color:#86efac;       border:2px solid #2d5a3a; }
+    .nota-circle.C { background:var(--yellow-bg); color:var(--yellow); border:2px solid var(--yellow-bdr); }
+    .nota-circle.D { background:#2a1a00; color:#fca000;       border:2px solid #5a3800; }
+    .nota-circle.F { background:var(--red-bg);    color:var(--red);    border:2px solid var(--red-bdr); }
+    .nota-texto h3 { font-size: 15px; font-weight: 500; color: var(--text); }
+    .nota-texto p  { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+    /* ── ALERTA DE TRAMPA ────────────────────────────── */
+    .trampa-alert {
+      background: #2e0d0d; border: 1px solid #8b2020; border-radius: var(--radius-sm);
+      padding: 14px 18px; margin-top: 16px; font-size: 13.5px; color: #fca5a5; line-height: 1.6;
+      display: none;
+    }
+    .trampa-alert.visible { display: block; animation: fadeUp .4s ease; }
+    .trampa-alert strong { color: var(--red); }
+
+    /* ── ESTADO DE ENVÍO A SHEETS ─────────────────────── */
+    .sheets-status {
+      margin-top: 12px; padding: 8px 14px; border-radius: var(--radius-sm);
+      font-size: 12.5px; display: none; align-items: center; gap: 8px;
+    }
+    .sheets-status.visible { display: flex; }
+    .sheets-status.enviando { background: #1a1f33; color: var(--muted); border: 1px solid var(--border); }
+    .sheets-status.ok       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bdr); }
+    .sheets-status.error    { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-bdr); }
+
+    /* ── HISTORIAL ────────────────────────────────────── */
+    #historial-section { display: none; }
+    #historial-section.visible { display: block; }
+    .historial-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--muted);
+    }
+    .historial-item:last-child { border-bottom: none; }
+    .historial-nota { font-weight: 700; font-family: var(--font-display); }
+
+    /* ── SOLUCIÓN MODELO ─────────────────────────────── */
+    #solucion-section { display: none; }
+    #solucion-section.visible { display: block; }
+    .solucion-header-box {
+      background: linear-gradient(135deg, #1a2a1a, #0f1f2a); border: 1px solid #2a5c3f;
+      border-radius: var(--radius-sm); padding: 16px 20px; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .solucion-header-icon { font-size: 28px; flex-shrink: 0; }
+    .solucion-header-box h3 { font-family: var(--font-display); font-size: 15px; font-weight: 800; color: var(--green); margin-bottom: 3px; }
+    .solucion-header-box p  { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .solucion-item {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 12px 16px; background: var(--green-bg); border: 1px solid var(--green-bdr);
+      border-radius: var(--radius-sm); margin-bottom: 8px; animation: fadeUp .35s ease both;
+    }
+    .solucion-num { font-family: var(--font-display); font-size: 11px; font-weight: 800; color: var(--green); background: #1a5c3f55; border-radius: 4px; padding: 2px 7px; flex-shrink: 0; margin-top: 2px; }
+    .solucion-item-texto { font-size: 14.5px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+    .solucion-item-razon { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+    .solucion-item-razon b { color: var(--green); font-weight: 500; }
+    .solucion-nota-pedagogica {
+      margin-top: 16px; padding: 14px 18px; background: #1a1f33;
+      border: 1px dashed #2a3050; border-radius: var(--radius-sm);
+      font-size: 13px; color: var(--muted); line-height: 1.6;
+    }
+    .solucion-nota-pedagogica b { color: var(--accent); }
+
+    @media (max-width: 480px) {
+      main { padding: 0 14px; }
+      .card { padding: 16px; }
+      .tip-bar { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     PANTALLA DE BIENVENIDA
+     ══════════════════════════════════════ -->
+<div id="welcome-screen">
+  <div class="welcome-box">
+    <span class="wicon">🧩</span>
+    <h2>Corrector de <span>Descomposición</span></h2>
+    <p>Practicá una de las habilidades clave del pensamiento computacional: dividir problemas complejos en partes manejables.<br><br>Para empezar, ingresá tu nombre completo.</p>
+    <input type="text" id="welcome-nombre" class="welcome-input"
+           placeholder="Tu nombre y apellido"
+           onkeydown="if(event.key==='Enter') iniciarSesion()"
+           autocomplete="name"/>
+    <div class="welcome-error" id="welcome-error" style="display:none"></div>
+    <button class="welcome-btn" onclick="iniciarSesion()">Comenzar →</button>
+    <div class="welcome-meta">
+      🔒 Tu nombre se registra para que el docente pueda hacer seguimiento
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     HEADER
+     ══════════════════════════════════════ -->
+<header>
+  <div class="header-badge">Pensamiento Computacional</div>
+  <h1>Corrector de <span>Descomposición</span></h1>
+  <div class="header-alumno">
+    <span>Trabajando como:</span>
+    <div class="alumno-chip">
+      👤 <span id="display-nombre">—</span>
+      <button title="Cambiar nombre" onclick="cambiarNombre()">✕</button>
+    </div>
+  </div>
+
+  <!-- Filtro de dificultad -->
+  <div class="dificultad-bar">
+    <button class="dif-btn" data-dif="todos"    onclick="filtrarDificultad('todos')">Todos</button>
+    <button class="dif-btn" data-dif="facil"    onclick="filtrarDificultad('facil')">🟢 Fácil</button>
+    <button class="dif-btn" data-dif="medio"    onclick="filtrarDificultad('medio')">🟡 Medio</button>
+    <button class="dif-btn" data-dif="dificil"  onclick="filtrarDificultad('dificil')">🔴 Difícil</button>
+  </div>
+</header>
+
+<main>
+  <!-- Guía rápida -->
+  <div class="tip-bar">
+    <div class="tip-item"><span class="tip-icon">🔢</span><div><b>Verbos en infinitivo</b><br>Cada subproblema empieza con un verbo que termina en -ar, -er o -ir.</div></div>
+    <div class="tip-item"><span class="tip-icon">🎯</span><div><b>Precisión</b><br>Evitá palabras vagas como "hacer", "procesar", "manejar" sin contexto.</div></div>
+    <div class="tip-item"><span class="tip-icon">⚖️</span><div><b>Granularidad</b><br>Si un subproblema parece muy grande, dividilo en pasos más pequeños.</div></div>
+  </div>
+
+  <!-- Problema -->
+  <div class="card" id="problema-container">
+    <div class="card-title"><span class="dot"></span>Problema a resolver</div>
+    <div id="dif-badge-container"></div>
+    <p id="problema-texto">Cargando...</p>
+    <div class="problema-actions">
+      <button class="btn btn-secondary" onclick="cargarProblemaAleatorio()">🔀 Otro problema</button>
+      <span id="problema-counter" style="font-size:12px;color:var(--muted);margin-left:4px"></span>
+    </div>
+  </div>
+
+  <!-- Entrada -->
+  <div class="card">
+    <div class="card-title"><span class="dot"></span>Tu descomposición</div>
+    <div id="subproblemas-wrapper"></div>
+    <div class="entry-actions">
+      <button class="btn btn-secondary" onclick="agregarFila()">+ Agregar subproblema</button>
+      <button class="btn btn-primary" onclick="evaluar()">✦ Evaluar descomposición</button>
+      <button class="btn btn-ghost" onclick="limpiarEntrada()">Limpiar</button>
+    </div>
+  </div>
+
+  <!-- Resultados -->
+  <div class="card" id="resultados-section">
+    <div class="card-title"><span class="dot"></span>Resultados de la evaluación</div>
+    <div class="resumen-bar">
+      <div class="resumen-pill verde"><span class="num" id="cnt-correcto">0</span> ✅ Correctos</div>
+      <div class="resumen-pill ambar"><span class="num" id="cnt-ambiguo">0</span>  ⚠️ Ambiguos</div>
+      <div class="resumen-pill rojo"><span class="num"  id="cnt-incorrecto">0</span> ❌ Incorrectos</div>
+    </div>
+    <div id="resultados-lista"></div>
+    <div class="nota-final">
+      <div class="nota-circle" id="nota-circle">–</div>
+      <div class="nota-texto"><h3 id="nota-titulo">—</h3><p id="nota-desc">—</p></div>
+    </div>
+    <!-- Alerta de trampa -->
+    <div class="trampa-alert" id="trampa-alert">
+      <strong>⚠️ Esto quedará registrado para el docente.</strong><br>
+      Detectamos que los 3 intentos fueron respondidos con subproblemas muy pobres o vacíos de forma consistente.
+      Si tuviste dificultades reales, no dudes en pedir ayuda — es parte del aprendizaje.
+    </div>
+    <!-- Estado de envío -->
+    <div class="sheets-status enviando" id="sheets-status">
+      <span>⏳</span> <span id="sheets-status-txt">Registrando en el sistema...</span>
+    </div>
+    <div class="entry-actions" style="margin-top:18px">
+      <button class="btn btn-primary" onclick="scrollEntrada()">✏️ Corregir y volver a evaluar</button>
+    </div>
+  </div>
+
+  <!-- Historial -->
+  <div class="card" id="historial-section">
+    <div class="card-title"><span class="dot"></span>Historial de intentos</div>
+    <div id="historial-lista"></div>
+  </div>
+
+  <!-- Solución modelo -->
+  <div class="card" id="solucion-section">
+    <div class="card-title"><span class="dot"></span>Solución modelo</div>
+    <div class="solucion-header-box">
+      <span class="solucion-header-icon">🏆</span>
+      <div>
+        <h3>Después de 3 intentos — solución de referencia</h3>
+        <p>Una descomposición correcta del problema. No es la única posible, pero cumple todos los criterios.</p>
+      </div>
+    </div>
+    <div id="solucion-lista"></div>
+    <div class="solucion-nota-pedagogica" id="solucion-nota"></div>
+  </div>
+</main>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════
+   CONFIGURACIÓN — pegá aquí la URL de tu Google Apps Script Web App
+   ════════════════════════════════════════════════════════════════════ */
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzTHilpzNUffGI7Hlg3ZKiAtKKUtw9kXWiAP2Rk6yEKgsJlrD9euTkBKhxGI8vJ7umvqA/exec';
+
+/* ════════════════════════════════════════════════════════════════════
+   BASE DE PROBLEMAS — 15 problemas, 5 por nivel de dificultad
+   ════════════════════════════════════════════════════════════════════ */
+const PROBLEMAS = [
+
+  /* ─────────────── FÁCILES ─────────────── */
+  {
+    id: 1, dificultad: 'facil',
+    texto: `<strong>Preparar un sándwich.</strong><br>
+            Describí cómo descompondrías la tarea de preparar un sándwich de jamón y queso, desde
+            que tenés los ingredientes en la heladera hasta que el sándwich está listo para comer.`,
+    dominio: ['pan','jamón','queso','ingrediente','untar','cortar','calentar','armar','sándwich'],
+    solucion: [
+      { texto: 'Sacar los ingredientes de la heladera (pan, jamón, queso)', razon: '<b>Paso inicial</b> claro y concreto: especifica qué ingredientes.' },
+      { texto: 'Cortar el pan al medio si viene entero', razon: 'Condición específica. "Cortar" es preciso y el objeto está bien definido.' },
+      { texto: 'Untar manteca o mayonesa sobre el pan', razon: 'Acción clara con objeto y resultado definidos.' },
+      { texto: 'Colocar el jamón sobre una de las mitades del pan', razon: 'Acción precisa: qué se pone y dónde.' },
+      { texto: 'Colocar el queso encima del jamón', razon: 'Orden importa: el queso va sobre el jamón, no al revés.' },
+      { texto: 'Cerrar el sándwich uniendo las dos mitades', razon: 'Paso de cierre claro y específico.' }
+    ],
+    notaPedagogica: '💡 <b>Para reflexionar:</b> hasta una tarea cotidiana como hacer un sándwich tiene un orden específico. Si colocás el queso antes que el pan, el resultado cambia. ¡Los algoritmos también!'
+  },
+  {
+    id: 2, dificultad: 'facil',
+    texto: `<strong>Enviar un mensaje de texto.</strong><br>
+            Pensá en todos los pasos que realizás desde que decidís enviar un mensaje hasta que
+            la otra persona lo recibe. Descomponé esta tarea en subproblemas claros y ordenados.`,
+    dominio: ['mensaje','contacto','teléfono','escribir','enviar','abrir','seleccionar','texto'],
+    solucion: [
+      { texto: 'Desbloquear el teléfono', razon: 'Paso previo necesario: sin esto no se puede hacer nada más.' },
+      { texto: 'Abrir la aplicación de mensajería', razon: 'Acción específica: qué app y con qué propósito.' },
+      { texto: 'Seleccionar el contacto al que se quiere enviar el mensaje', razon: 'Claramente separado del paso de escribir.' },
+      { texto: 'Escribir el texto del mensaje', razon: 'Acción de composición, bien delimitada.' },
+      { texto: 'Revisar el mensaje antes de enviarlo', razon: 'Paso de validación opcional pero buena práctica.' },
+      { texto: 'Presionar el botón de enviar', razon: 'Acción final que dispara el envío.' }
+    ],
+    notaPedagogica: '💡 <b>Para reflexionar:</b> "seleccionar el contacto" y "escribir el mensaje" son dos pasos separados aunque parezcan uno solo. Identificar esa frontera es el corazón de la descomposición.'
+  },
+  {
+    id: 3, dificultad: 'facil',
+    texto: `<strong>Sacar una foto con el celular.</strong><br>
+            Descomponé en subproblemas el proceso de sacar una foto, editarla y compartirla
+            con un amigo por redes sociales.`,
+    dominio: ['foto','cámara','celular','filtro','editar','compartir','publicar','encuadre'],
+    solucion: [
+      { texto: 'Abrir la aplicación de cámara del celular', razon: 'Primer paso necesario para acceder a la cámara.' },
+      { texto: 'Encuadrar el objeto o persona a fotografiar', razon: '"Encuadrar" es preciso: implica mover el teléfono para componer la imagen.' },
+      { texto: 'Tomar la foto presionando el botón de captura', razon: 'Acción específica separada del encuadre.' },
+      { texto: 'Abrir la foto en el editor y aplicar ajustes o filtros', razon: 'Paso de edición bien diferenciado de la captura.' },
+      { texto: 'Guardar la versión editada de la foto', razon: 'Paso intermedio necesario antes de compartir.' },
+      { texto: 'Compartir la foto en la red social seleccionada', razon: 'Acción final de publicación, separada de la edición.' }
+    ],
+    notaPedagogica: '💡 <b>Para reflexionar:</b> "sacar una foto y compartirla" parece una sola tarea, pero tiene al menos 6 subproblemas distintos. La descomposición revela toda esa complejidad oculta.'
+  },
+  {
+    id: 4, dificultad: 'facil',
+    texto: `<strong>Buscar y reproducir una canción en Spotify.</strong><br>
+            Descomponé en subproblemas el proceso de abrir Spotify, encontrar una canción específica
+            y empezar a reproducirla.`,
+    dominio: ['canción','Spotify','búsqueda','reproducir','artista','playlist','abrir','seleccionar'],
+    solucion: [
+      { texto: 'Abrir la aplicación Spotify en el dispositivo', razon: 'Paso inicial claro y necesario.' },
+      { texto: 'Iniciar sesión con usuario y contraseña si no está activa la sesión', razon: 'Condición específica que puede o no ocurrir.' },
+      { texto: 'Tocar el ícono de búsqueda e ingresar el nombre de la canción o artista', razon: 'Dos acciones muy ligadas que forman una unidad: abrir buscador + escribir.' },
+      { texto: 'Seleccionar la canción correcta de los resultados', razon: 'Acción de decisión: elegir entre varias opciones del resultado.' },
+      { texto: 'Presionar el botón de reproducción para iniciar la canción', razon: 'Acción final de inicio de reproducción.' }
+    ],
+    notaPedagogica: '💡 <b>Para reflexionar:</b> "buscar una canción" parece simple, pero involucra al menos tres pasos distintos: abrir el buscador, escribir el nombre y elegir el resultado correcto.'
+  },
+  {
+    id: 5, dificultad: 'facil',
+    texto: `<strong>Hacer una compra en un kiosco.</strong><br>
+            Descomponé el proceso de comprar algo en un kiosco: desde entrar al local
+            hasta salir con el producto.`,
+    dominio: ['producto','pagar','precio','kiosco','elegir','cambio','dinero','comprar'],
+    solucion: [
+      { texto: 'Entrar al kiosco y acercarse a la zona de productos', razon: 'Paso físico inicial necesario.' },
+      { texto: 'Identificar el producto que se quiere comprar', razon: '"Identificar" es preciso: implica buscar visualmente entre los productos.' },
+      { texto: 'Consultar el precio del producto al vendedor o verificarlo en la etiqueta', razon: 'Paso de información previo al pago.' },
+      { texto: 'Entregar el dinero al vendedor', razon: 'Acción clara de intercambio.' },
+      { texto: 'Recibir el vuelto si corresponde', razon: 'Paso condicional: solo ocurre si el pago supera el precio.' },
+      { texto: 'Recibir el producto y guardarlo', razon: 'Paso final de cierre de la transacción.' }
+    ],
+    notaPedagogica: '💡 <b>Para reflexionar:</b> "pagar" parece una sola acción, pero involucra entregar dinero, recibir vuelto y recibir el producto. Cada uno puede fallar de forma independiente.'
+  },
+
+  /* ─────────────── MEDIO ─────────────── */
+  {
+    id: 6, dificultad: 'medio',
+    texto: `<strong>Sistema de préstamo de libros en una biblioteca escolar.</strong><br>
+            Una biblioteca necesita que los alumnos busquen libros disponibles, registren préstamos
+            y devoluciones, y reciban recordatorios cuando el plazo está por vencer.
+            El sistema debe saber qué alumno tiene cada libro y desde cuándo.`,
+    dominio: ['libro','alumno','biblioteca','préstamo','devolución','plazo','recordatorio','registro'],
+    solucion: [
+      { texto: 'Buscar libros disponibles por título, autor o categoría', razon: '<b>Verbo preciso</b> + tres criterios de búsqueda. No ambiguo.' },
+      { texto: 'Registrar el préstamo indicando el alumno, el libro y la fecha', razon: 'Todos los datos necesarios: quién, qué y cuándo.' },
+      { texto: 'Registrar la devolución del libro y actualizar su disponibilidad', razon: 'Dos acciones ligadas que forman una unidad lógica.' },
+      { texto: 'Calcular la fecha límite de devolución de cada préstamo', razon: 'Operación matemática separada del registro.' },
+      { texto: 'Detectar los préstamos cuyo plazo está por vencer', razon: 'Acción de consulta previa al envío del recordatorio.' },
+      { texto: 'Enviar un recordatorio al alumno cuando el vencimiento se acerca', razon: 'Comunicación externa, separada de la detección.' }
+    ],
+    notaPedagogica: '💡 <b>Para reflexionar:</b> separamos "detectar" de "enviar" porque son responsabilidades distintas: una consulta datos, la otra realiza una acción externa.'
+  },
+  {
+    id: 7, dificultad: 'medio',
+    texto: `<strong>Aplicación de control de gastos personales.</strong><br>
+            Una persona quiere ingresar gastos con categoría (comida, transporte, ocio),
+            ver el total por categoría y recibir una alerta cuando supera el presupuesto asignado.`,
+    dominio: ['gasto','categoría','presupuesto','alerta','total','mes','superar','ingresar'],
+    solucion: [
+      { texto: 'Registrar un gasto con su monto, categoría y fecha', razon: 'Tres datos obligatorios bien especificados.' },
+      { texto: 'Definir el presupuesto mensual para cada categoría', razon: 'Paso previo necesario para poder comparar.' },
+      { texto: 'Calcular el total gastado por categoría en el mes actual', razon: 'Cálculo separado del registro: agrupación y suma.' },
+      { texto: 'Comparar el total gastado con el presupuesto de cada categoría', razon: 'Operación lógica distinta al cálculo: produce un resultado booleano.' },
+      { texto: 'Mostrar una alerta cuando el gasto supera el presupuesto de una categoría', razon: 'Consecuencia de la comparación, acción de interfaz separada.' }
+    ],
+    notaPedagogica: '💡 <b>Para reflexionar:</b> calcular y comparar son pasos distintos. Calcular produce un número; comparar toma una decisión sobre ese número.'
+  },
+  {
+    id: 8, dificultad: 'medio',
+    texto: `<strong>Sistema de registro de asistencia escolar.</strong><br>
+            Un docente necesita registrar quién asistió a cada clase, calcular el porcentaje
+            de asistencia de cada alumno, marcar a quienes están en riesgo de quedarse libres
+            y notificar a los padres si el alumno falta más de 3 veces seguidas.`,
+    dominio: ['asistencia','alumno','docente','falta','porcentaje','notificación','padre','registro'],
+    solucion: [
+      { texto: 'Registrar la asistencia de cada alumno al inicio de la clase', razon: 'Acción principal de entrada de datos: cuándo, quién y qué clase.' },
+      { texto: 'Calcular el porcentaje de asistencia de cada alumno en el período', razon: 'Cálculo separado del registro: usa los datos acumulados.' },
+      { texto: 'Identificar los alumnos cuyo porcentaje está por debajo del mínimo requerido', razon: 'Acción de detección basada en el cálculo previo.' },
+      { texto: 'Detectar si un alumno tiene 3 o más faltas consecutivas', razon: 'Lógica específica de negocio: hay que analizar el historial.' },
+      { texto: 'Enviar una notificación a los padres cuando se detectan faltas consecutivas', razon: 'Comunicación externa separada de la detección.' },
+      { texto: 'Mostrar un reporte de asistencia por alumno y por clase al docente', razon: 'Acción de presentación de datos: separada de los cálculos.' }
+    ],
+    notaPedagogica: '💡 <b>Para reflexionar:</b> "detectar faltas consecutivas" y "calcular porcentaje" son dos operaciones completamente distintas sobre los mismos datos. Separarlas hace el sistema más flexible.'
+  },
+  {
+    id: 9, dificultad: 'medio',
+    texto: `<strong>Juego de trivia para el aula.</strong><br>
+            Los alumnos responden preguntas de opción múltiple. El juego muestra preguntas al azar,
+            controla el tiempo de respuesta, registra puntajes y muestra un ranking final.`,
+    dominio: ['pregunta','alumno','puntaje','tiempo','ranking','respuesta','opción','partida'],
+    solucion: [
+      { texto: 'Seleccionar una pregunta al azar del banco de preguntas', razon: 'Qué se hace, cómo y de dónde, todo especificado.' },
+      { texto: 'Mostrar la pregunta con sus opciones de respuesta al alumno', razon: 'Presentación separada de la selección.' },
+      { texto: 'Iniciar el contador de tiempo para la respuesta', razon: 'Responsabilidad técnica independiente.' },
+      { texto: 'Registrar la respuesta elegida por el alumno', razon: 'Captura del dato antes de evaluarlo.' },
+      { texto: 'Evaluar si la respuesta es correcta y actualizar el puntaje', razon: 'Lógica de juego: comparación + consecuencia.' },
+      { texto: 'Mostrar el ranking final con los puntajes de todos los alumnos', razon: 'Acción de cierre del juego, bien delimitada.' }
+    ],
+    notaPedagogica: '💡 <b>Para reflexionar:</b> registrar la respuesta y evaluar si es correcta son pasos distintos. Separar permite corregir cada uno sin afectar el otro.'
+  },
+  {
+    id: 10, dificultad: 'medio',
+    texto: `<strong>Sistema de gestión de turnos para una peluquería.</strong><br>
+            Una peluquería quiere que los clientes puedan reservar turno por WhatsApp o por la web,
+            elegir el servicio y el peluquero, recibir confirmación, y cancelar con al menos
+            2 horas de anticipación.`,
+    dominio: ['turno','cliente','peluquero','servicio','reservar','cancelar','confirmación','anticipación'],
+    solucion: [
+      { texto: 'Mostrar los servicios disponibles y sus precios al cliente', razon: 'Primer paso: el cliente necesita saber qué puede pedir.' },
+      { texto: 'Permitir al cliente elegir el servicio y el peluquero de preferencia', razon: 'Dos decisiones vinculadas que forman una unidad: servicio + profesional.' },
+      { texto: 'Consultar los horarios disponibles para el peluquero y servicio elegidos', razon: 'Depende de las elecciones previas; es una acción de búsqueda.' },
+      { texto: 'Registrar la reserva con los datos del cliente, servicio, peluquero y horario', razon: 'Todos los datos necesarios especificados.' },
+      { texto: 'Enviar la confirmación del turno al cliente por el canal elegido', razon: 'Comunicación externa bien delimitada.' },
+      { texto: 'Validar que la cancelación se realice con al menos 2 horas de anticipación', razon: 'Regla de negocio específica y verificable.' },
+      { texto: 'Cancelar el turno y liberar el horario en el sistema', razon: 'Dos efectos ligados que ocurren juntos.' }
+    ],
+    notaPedagogica: '💡 <b>Para reflexionar:</b> "elegir servicio y peluquero" podrían ser dos pasos separados, pero si siempre se hacen juntos, es válido unirlos. La descomposición tiene cierta flexibilidad.'
+  },
+
+  /* ─────────────── DIFÍCIL ─────────────── */
+  {
+    id: 11, dificultad: 'dificil',
+    texto: `<strong>Sistema de recomendación de películas.</strong><br>
+            Una plataforma de streaming quiere recomendar películas personalizadas a cada usuario
+            basándose en su historial de visualización, géneros favoritos, calificaciones que dio
+            y tendencias actuales. Las recomendaciones deben actualizarse cada vez que el usuario
+            ve una película nueva o cambia sus preferencias.`,
+    dominio: ['película','usuario','historial','género','calificación','recomendación','tendencia','preferencia','actualizar'],
+    solucion: [
+      { texto: 'Registrar cada película vista por el usuario con su fecha y duración vista', razon: 'Datos de entrada esenciales: qué, cuándo y cuánto se vio.' },
+      { texto: 'Calcular los géneros favoritos del usuario según su historial', razon: 'Cálculo de preferencias: analiza el historial para encontrar patrones.' },
+      { texto: 'Obtener las calificaciones que el usuario dio a las películas vistas', razon: 'Fuente de datos de calidad: diferente al historial de visualización.' },
+      { texto: 'Obtener las películas en tendencia según la actividad global de la plataforma', razon: 'Fuente de datos externa al usuario: análisis colectivo.' },
+      { texto: 'Aplicar el algoritmo de recomendación combinando historial, calificaciones y tendencias', razon: 'El núcleo del sistema: combina múltiples fuentes de datos.' },
+      { texto: 'Filtrar las películas ya vistas para excluirlas de las recomendaciones', razon: 'Paso de limpieza de resultados: evita recomendar lo ya visto.' },
+      { texto: 'Ordenar las recomendaciones por relevancia estimada para el usuario', razon: 'Presentación optimizada: las más relevantes primero.' },
+      { texto: 'Actualizar las recomendaciones cuando el usuario ve una película nueva', razon: 'Trigger específico: define cuándo se recalcula el sistema.' }
+    ],
+    notaPedagogica: '💡 <b>Para reflexionar:</b> este problema combina múltiples fuentes de datos (historial, calificaciones, tendencias). Cada fuente tiene su propio subproblema de obtención antes de poder combinarlos.'
+  },
+  {
+    id: 12, dificultad: 'dificil',
+    texto: `<strong>Plataforma de e-commerce con gestión de inventario.</strong><br>
+            Una tienda online necesita gestionar su catálogo de productos, procesar pagos de forma
+            segura, coordinar el envío con distintos proveedores logísticos, actualizar el inventario
+            en tiempo real y enviar notificaciones al comprador en cada etapa del proceso.`,
+    dominio: ['producto','inventario','pago','envío','proveedor','notificación','comprador','catálogo','stock'],
+    solucion: [
+      { texto: 'Mostrar el catálogo de productos con stock disponible actualizado', razon: 'Solo mostrar productos con stock: filtrado previo necesario.' },
+      { texto: 'Registrar los productos elegidos en el carrito de compras del usuario', razon: 'Acción de selección temporal antes del pago.' },
+      { texto: 'Verificar que el stock de cada producto en el carrito sigue disponible antes del pago', razon: 'Validación crítica: el stock puede cambiar entre que se agrega al carrito y se paga.' },
+      { texto: 'Procesar el pago verificando los datos de la tarjeta con la entidad bancaria', razon: 'Operación de pago separada de la orden: involucra sistemas externos.' },
+      { texto: 'Confirmar la compra y generar el número de orden', razon: 'Registro interno de la compra exitosa.' },
+      { texto: 'Reducir el stock de cada producto vendido en el inventario', razon: 'Actualización de inventario: crítico para no sobrevender.' },
+      { texto: 'Seleccionar el proveedor logístico según destino y costo de envío', razon: 'Lógica de negocio: distintos proveedores según condiciones.' },
+      { texto: 'Notificar al comprador el estado del pedido en cada etapa', razon: 'Comunicación continua, separada de cada cambio de estado.' }
+    ],
+    notaPedagogica: '💡 <b>Para reflexionar:</b> "verificar stock antes del pago" es un subproblema que muchos olvidan. Si no se verifica en ese momento, un usuario puede pagar un producto que ya se agotó.'
+  },
+  {
+    id: 13, dificultad: 'dificil',
+    texto: `<strong>Sistema de detección de fraude en transacciones bancarias.</strong><br>
+            Un banco necesita analizar en tiempo real cada transacción que realiza un cliente,
+            detectar patrones inusuales (montos fuera de lo normal, ubicaciones extrañas,
+            múltiples transacciones en segundos), bloquear automáticamente las sospechosas
+            y notificar al cliente para que confirme o rechace.`,
+    dominio: ['transacción','fraude','patrón','bloquear','notificar','cliente','monto','ubicación','historial'],
+    solucion: [
+      { texto: 'Recibir los datos de cada transacción en tiempo real', razon: 'Punto de entrada del sistema: qué datos llegan y cuándo.' },
+      { texto: 'Obtener el historial de transacciones del cliente para establecer su perfil', razon: 'Sin el perfil del cliente no hay referencia para detectar anomalías.' },
+      { texto: 'Analizar si el monto de la transacción es inusual según el historial del cliente', razon: 'Una de varias dimensiones de análisis: los montos.' },
+      { texto: 'Verificar si la ubicación geográfica de la transacción es coherente con el patrón del cliente', razon: 'Otra dimensión de análisis independiente: la ubicación.' },
+      { texto: 'Detectar si hay múltiples transacciones del cliente en un período muy corto', razon: 'Tercera dimensión: la frecuencia temporal de transacciones.' },
+      { texto: 'Calcular un puntaje de riesgo combinando todas las señales detectadas', razon: 'Combina los análisis anteriores en un único indicador de riesgo.' },
+      { texto: 'Bloquear la transacción si el puntaje de riesgo supera el umbral definido', razon: 'Acción de respuesta automática basada en el puntaje.' },
+      { texto: 'Notificar al cliente y solicitar confirmación o rechazo de la transacción sospechosa', razon: 'Interacción con el cliente separada del bloqueo automático.' }
+    ],
+    notaPedagogica: '💡 <b>Para reflexionar:</b> el análisis de fraude tiene múltiples "dimensiones" independientes (monto, ubicación, frecuencia). Cada una es un subproblema separado que contribuye al puntaje final.'
+  },
+  {
+    id: 14, dificultad: 'dificil',
+    texto: `<strong>Sistema de gestión de un hospital de urgencias.</strong><br>
+            Un hospital necesita gestionar la llegada de pacientes de urgencias, clasificarlos
+            por gravedad (triage), asignarlos a médicos y salas disponibles, registrar el
+            tratamiento recibido, y dar de alta o derivar a otra área según la evolución.`,
+    dominio: ['paciente','urgencia','triage','médico','sala','tratamiento','alta','derivar','gravedad'],
+    solucion: [
+      { texto: 'Registrar los datos del paciente al llegar a urgencias', razon: 'Primer paso: identificación básica del paciente.' },
+      { texto: 'Evaluar la gravedad del paciente mediante el protocolo de triage', razon: 'Clasificación urgente que determina la prioridad de atención.' },
+      { texto: 'Asignar una prioridad de atención según el resultado del triage', razon: 'Resultado de la evaluación: determina el orden de atención.' },
+      { texto: 'Consultar la disponibilidad de médicos y salas según la prioridad asignada', razon: 'Antes de asignar, hay que saber qué recursos están libres.' },
+      { texto: 'Asignar el médico y sala disponibles al paciente', razon: 'Acción de asignación de recursos, separada de la consulta.' },
+      { texto: 'Registrar el tratamiento y medicación recibidos durante la atención', razon: 'Documentación clínica: esencial para el historial del paciente.' },
+      { texto: 'Evaluar la evolución del paciente para decidir alta o derivación', razon: 'Decisión clínica al final de la atención, con dos caminos posibles.' },
+      { texto: 'Ejecutar el alta o la derivación al área correspondiente y liberar la sala', razon: 'Cierre del proceso: liberar recursos para el próximo paciente.' }
+    ],
+    notaPedagogica: '💡 <b>Para reflexionar:</b> "consultar disponibilidad" y "asignar" son pasos distintos. Primero hay que saber qué hay disponible; recién después se puede asignar. Este patrón aparece en muchos sistemas.'
+  },
+  {
+    id: 15, dificultad: 'dificil',
+    texto: `<strong>Aplicación de seguimiento de hábitos con IA.</strong><br>
+            Una app quiere ayudar a los usuarios a construir hábitos saludables. Permite registrar
+            hábitos diarios, analiza las rachas y patrones de cumplimiento, genera sugerencias
+            personalizadas usando IA, y ajusta automáticamente los recordatorios según el
+            momento del día en que el usuario suele cumplir cada hábito.`,
+    dominio: ['hábito','racha','recordatorio','usuario','análisis','sugerencia','cumplimiento','patrón','IA'],
+    solucion: [
+      { texto: 'Registrar el cumplimiento o no de cada hábito por día', razon: 'Dato de entrada básico: qué hábito, qué día y si se cumplió.' },
+      { texto: 'Calcular la racha actual de días consecutivos con el hábito cumplido', razon: 'Métrica de motivación: requiere analizar el historial consecutivo.' },
+      { texto: 'Analizar los horarios en que el usuario suele cumplir cada hábito', razon: 'Patrón temporal: necesita historial de timestamps para detectarlo.' },
+      { texto: 'Ajustar automáticamente el horario del recordatorio según el patrón detectado', razon: 'Acción resultante del análisis de horarios: personalización dinámica.' },
+      { texto: 'Identificar hábitos con bajo porcentaje de cumplimiento en las últimas semanas', razon: 'Detección de problemas: base para las sugerencias de la IA.' },
+      { texto: 'Generar sugerencias personalizadas con IA para los hábitos con bajo cumplimiento', razon: 'Procesamiento de IA separado de la detección del problema.' },
+      { texto: 'Mostrar las sugerencias y el resumen de progreso al usuario en el dashboard', razon: 'Presentación final: separada del análisis y la generación de sugerencias.' }
+    ],
+    notaPedagogica: '💡 <b>Para reflexionar:</b> "detectar el problema" y "generar la sugerencia" son dos pasos distintos aunque parezcan uno. La detección usa reglas simples; la sugerencia usa IA. Separarlos permite mejorar cada parte de forma independiente.'
+  }
+];
+
+/* ════════════════════════════════════════════════════════════════════
+   EVALUACIÓN HEURÍSTICA — verbos y criterios
+   ════════════════════════════════════════════════════════════════════ */
+const INFINITIVO_REGEX = /^[a-záéíóúñü]+[aei]r\b/i;
+const VERBOS_VAGOS     = ['hacer','procesar','manejar','gestionar','controlar','tratar','ocuparse','encargarse','realizar','efectuar','llevar','tener','poner','dar','tomar'];
+const VERBOS_CONTEXTO  = ['verificar','validar','comprobar','revisar','chequear','actualizar','modificar','obtener','generar','crear','eliminar','borrar'];
+const CONECTORES       = [' y ',' además ',' también ',' luego ',' después ',', '];
+
+/* ════════════════════════════════════════════════════════════════════
+   ESTADO DE LA APLICACIÓN
+   ════════════════════════════════════════════════════════════════════ */
+let nombreAlumno     = '';
+let problemaActual   = null;
+let filtroDificultad = 'todos';
+let intentos         = [];   // array de objetos por cada evaluación
+
+/* ════════════════════════════════════════════════════════════════════
+   BIENVENIDA Y SESIÓN
+   ════════════════════════════════════════════════════════════════════ */
+function iniciarSesion() {
+  const input = document.getElementById('welcome-nombre');
+  const nombre = input.value.trim();
+  const errEl = document.getElementById('welcome-error');
+
+  if (nombre.length < 3) {
+    input.classList.add('error');
+    errEl.textContent = 'Por favor ingresá tu nombre completo (mínimo 3 caracteres).';
+    errEl.style.display = 'block';
+    setTimeout(() => input.classList.remove('error'), 500);
+    return;
+  }
+  if (!/\s/.test(nombre)) {
+    input.classList.add('error');
+    errEl.textContent = 'Ingresá nombre y apellido, separados por un espacio.';
+    errEl.style.display = 'block';
+    setTimeout(() => input.classList.remove('error'), 500);
+    return;
+  }
+
+  nombreAlumno = nombre;
+  document.getElementById('display-nombre').textContent = nombre;
+  document.getElementById('welcome-screen').style.display = 'none';
+
+  filtrarDificultad('todos');
+  cargarProblemaAleatorio();
+  agregarFila(); agregarFila(); agregarFila();
+}
+
+function cambiarNombre() {
+  if (confirm('¿Querés cambiar el nombre? Se perderá el progreso actual.')) {
+    intentos = [];
+    document.getElementById('welcome-nombre').value = '';
+    document.getElementById('welcome-error').style.display = 'none';
+    document.getElementById('welcome-screen').style.display = 'flex';
+    document.getElementById('resultados-section').classList.remove('visible');
+    document.getElementById('historial-section').classList.remove('visible');
+    document.getElementById('solucion-section').classList.remove('visible');
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   FILTRO Y CARGA DE PROBLEMAS
+   ════════════════════════════════════════════════════════════════════ */
+function filtrarDificultad(dif) {
+  filtroDificultad = dif;
+
+  // Actualizar botones
+  document.querySelectorAll('.dif-btn').forEach(b => {
+    b.className = 'dif-btn';
+    if (b.dataset.dif === dif) {
+      if (dif !== 'todos') b.classList.add(`active-${dif}`);
+    }
+  });
+
+  cargarProblemaAleatorio();
+}
+
+function cargarProblemaAleatorio() {
+  const pool = filtroDificultad === 'todos'
+    ? PROBLEMAS
+    : PROBLEMAS.filter(p => p.dificultad === filtroDificultad);
+
+  const candidatos = problemaActual
+    ? pool.filter(p => p.id !== problemaActual.id)
+    : pool;
+
+  const fuente = candidatos.length > 0 ? candidatos : pool;
+  problemaActual = fuente[Math.floor(Math.random() * fuente.length)];
+
+  // Mostrar badge de dificultad
+  const labels = { facil:'🟢 Fácil', medio:'🟡 Medio', dificil:'🔴 Difícil' };
+  document.getElementById('dif-badge-container').innerHTML =
+    `<div class="dif-badge ${problemaActual.dificultad}">${labels[problemaActual.dificultad]}</div>`;
+
+  document.getElementById('problema-texto').innerHTML = problemaActual.texto;
+
+  // Contador del pool actual
+  const total = filtroDificultad === 'todos' ? PROBLEMAS.length : pool.length;
+  document.getElementById('problema-counter').textContent = `${total} problema${total!==1?'s':''} disponibles en este nivel`;
+
+  // Limpiar estado previo
+  intentos = [];
+  document.getElementById('resultados-section').classList.remove('visible');
+  document.getElementById('historial-section').classList.remove('visible');
+  document.getElementById('solucion-section').classList.remove('visible');
+  document.getElementById('trampa-alert').classList.remove('visible');
+  document.getElementById('sheets-status').classList.remove('visible');
+  limpiarEntrada();
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   GESTIÓN DE FILAS
+   ════════════════════════════════════════════════════════════════════ */
+function agregarFila(valor = '') {
+  const wrapper = document.getElementById('subproblemas-wrapper');
+  const row = document.createElement('div');
+  row.className = 'subproblema-row';
+  row.innerHTML = `
+    <span class="subproblema-num">${wrapper.children.length + 1}.</span>
+    <input class="subproblema-input" type="text"
+           placeholder="Ej: calcular el total de gastos por categoría"
+           value="${escaparHTML(valor)}"
+           onkeydown="manejarEnter(event, this)"/>
+    <button class="btn-remove" title="Eliminar" onclick="eliminarFila(this)">×</button>`;
+  wrapper.appendChild(row);
+  renumerar();
+  row.querySelector('input').focus();
+}
+
+function eliminarFila(btn) {
+  const wrapper = document.getElementById('subproblemas-wrapper');
+  if (wrapper.children.length <= 1) return;
+  btn.closest('.subproblema-row').remove();
+  renumerar();
+}
+
+function renumerar() {
+  document.querySelectorAll('.subproblema-row').forEach((f, i) => {
+    f.querySelector('.subproblema-num').textContent = `${i + 1}.`;
+  });
+}
+
+function manejarEnter(e, input) {
+  if (e.key === 'Enter') { e.preventDefault(); agregarFila(); }
+}
+
+function limpiarEntrada() {
+  document.getElementById('subproblemas-wrapper').innerHTML = '';
+  ['resultados-section','historial-section','solucion-section'].forEach(id => {
+    document.getElementById(id).classList.remove('visible');
+  });
+  document.getElementById('trampa-alert').classList.remove('visible');
+  agregarFila(); agregarFila(); agregarFila();
+}
+
+function scrollEntrada() {
+  document.getElementById('subproblemas-wrapper').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   EVALUACIÓN PRINCIPAL
+   ════════════════════════════════════════════════════════════════════ */
+function evaluar() {
+  const textos = [...document.querySelectorAll('.subproblema-input')]
+    .map(i => i.value.trim()).filter(Boolean);
+
+  if (!textos.length) { alert('Ingresá al menos un subproblema antes de evaluar.'); return; }
+
+  const evaluaciones = textos.map((t, i) => evaluarSubproblema(t, i + 1));
+  mostrarResultados(evaluaciones);
+
+  const puntaje = calcularPuntaje(evaluaciones);
+  const nota    = calcularNota(puntaje);
+  const nCorr   = evaluaciones.filter(e => e.estado === 'correcto').length;
+  const nAmb    = evaluaciones.filter(e => e.estado === 'ambiguo').length;
+  const nInc    = evaluaciones.filter(e => e.estado === 'incorrecto').length;
+
+  const intentoNum = intentos.length + 1;
+
+  // Registrar intento
+  intentos.push({
+    numero:     intentoNum,
+    cantidad:   textos.length,
+    nota,
+    correctos:  nCorr,
+    ambiguos:   nAmb,
+    incorrectos:nInc,
+    subproblemas: textos
+  });
+
+  // Actualizar historial visual
+  mostrarHistorial();
+
+  // Detectar trampa: 3 intentos, todos con nota D o F
+  const trampa = intentos.length >= 3 &&
+    intentos.every(it => ['D','F'].includes(it.nota)) &&
+    intentos.every(it => it.cantidad <= 2 || it.incorrectos / it.cantidad >= 0.8);
+
+  if (trampa) {
+    document.getElementById('trampa-alert').classList.add('visible');
+  }
+
+  // Enviar a Google Sheets
+  enviarASheets({
+    nombre:      nombreAlumno,
+    fechaHora:   new Date().toLocaleString('es-AR'),
+    problema:    problemaActual.texto.replace(/<[^>]+>/g,'').trim().substring(0,80),
+    dificultad:  problemaActual.dificultad,
+    intento:     intentoNum,
+    nota,
+    total:       textos.length,
+    correctos:   nCorr,
+    ambiguos:    nAmb,
+    incorrectos: nInc,
+    subproblemas:textos.join(' | '),
+    trampa:      trampa ? 'SÍ' : 'NO'
+  });
+
+  // Mostrar solución al 3er intento
+  if (intentos.length >= 3) mostrarSolucion();
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   EVALUACIÓN DE UN SUBPROBLEMA
+   ════════════════════════════════════════════════════════════════════ */
+function evaluarSubproblema(texto, numero) {
+  const feedbacks = [];
+  let penalizacion = 0;
+  const low     = texto.toLowerCase().trim();
+  const palabras = low.split(/\s+/);
+  const primera  = palabras[0] || '';
+
+  if (!INFINITIVO_REGEX.test(primera)) {
+    penalizacion += 2;
+    if (/^(el|la|los|las|un|una)/.test(low))
+      feedbacks.push({ msg:`Empieza con un artículo. Los subproblemas deben iniciar con un <b>verbo en infinitivo</b>.`, sug:`¿Cuál es la acción principal? Reformulá empezando con el verbo.` });
+    else
+      feedbacks.push({ msg:`"<b>${primera}</b>" no parece un verbo en infinitivo (no termina en -ar, -er o -ir).`, sug:`Si el verbo está conjugado (ej: "calcula"), usá el infinitivo: <em>"calcular"</em>.` });
+  } else {
+    if (VERBOS_VAGOS.includes(primera)) {
+      penalizacion += 2;
+      feedbacks.push({ msg:`"<b>${primera}</b>" es demasiado genérico; no comunica qué hace exactamente este paso.`, sug:`¿Qué significa "${primera}" en este contexto? Usá un verbo más específico.` });
+    }
+    const esContexto = VERBOS_CONTEXTO.includes(primera);
+    if (esContexto && palabras.length < 4) {
+      penalizacion += 1;
+      feedbacks.push({ msg:`"<b>${primera}</b>" puede ser impreciso si no se especifica qué exactamente.`, sug:`Completá: <em>"${primera} que [condición específica]"</em>` });
+    }
+    if (palabras.length <= 2 && penalizacion === 0) {
+      penalizacion += 1;
+      feedbacks.push({ msg:'El subproblema es muy corto y probablemente vago.', sug:'¿Qué objeto o dato involucra esta acción? Agregá más detalle.' });
+    }
+    const tieneConector = CONECTORES.some(c => low.includes(c));
+    if (tieneConector && palabras.length > 8) {
+      penalizacion += 1;
+      feedbacks.push({ msg:'Parece tener más de una acción ("y", "además", "luego"…).', sug:'¿Podés dividirlo en dos subproblemas? Cada uno debe describir <b>una sola acción</b>.' });
+    }
+    const hayRel = problemaActual.dominio.some(p => low.includes(p));
+    if (!hayRel && palabras.length > 3 && penalizacion === 0) {
+      penalizacion += 1;
+      feedbacks.push({ msg:'No se detectan términos del problema planteado.', sug:'Revisá que el subproblema mencione elementos del contexto.' });
+    }
+  }
+
+  if (penalizacion === 0) {
+    feedbacks.push({ msg:'Comienza con verbo en infinitivo claro y tiene precisión adecuada.', sug: null });
+    if (CONECTORES.some(c => low.includes(c)))
+      feedbacks.push({ msg:'Nota: podrías dividirlo en dos si lo considerás conveniente.', sug: null });
+  }
+
+  const estado = penalizacion === 0 ? 'correcto' : penalizacion === 1 ? 'ambiguo' : 'incorrecto';
+  return { numero, texto, estado, feedbacks };
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   MOSTRAR RESULTADOS
+   ════════════════════════════════════════════════════════════════════ */
+function mostrarResultados(evaluaciones) {
+  const nC = evaluaciones.filter(e => e.estado === 'correcto').length;
+  const nA = evaluaciones.filter(e => e.estado === 'ambiguo').length;
+  const nI = evaluaciones.filter(e => e.estado === 'incorrecto').length;
+
+  document.getElementById('cnt-correcto').textContent  = nC;
+  document.getElementById('cnt-ambiguo').textContent   = nA;
+  document.getElementById('cnt-incorrecto').textContent = nI;
+
+  const lista = document.getElementById('resultados-lista');
+  lista.innerHTML = '';
+  const iconos = { correcto:'✅', ambiguo:'⚠️', incorrecto:'❌' };
+  const etiq   = { correcto:'Correcto', ambiguo:'Ambiguo / Mejorable', incorrecto:'Incorrecto' };
+
+  evaluaciones.forEach((ev, idx) => {
+    const item = document.createElement('div');
+    item.className = `resultado-item ${ev.estado}`;
+    item.style.animationDelay = `${idx * 60}ms`;
+    const fbH = ev.feedbacks.map(f => `<li>${f.msg}</li>${f.sug ? `<li>💡 ${f.sug}</li>` : ''}`).join('');
+    item.innerHTML = `
+      <div class="resultado-header">
+        <span class="resultado-icono">${iconos[ev.estado]}</span>
+        <span class="resultado-texto">${escaparHTML(ev.texto)}</span>
+        <span class="resultado-num">#${ev.numero} · ${etiq[ev.estado]}</span>
+      </div>
+      <ul class="feedback-lista">${fbH}</ul>`;
+    lista.appendChild(item);
+  });
+
+  const puntaje = calcularPuntaje(evaluaciones);
+  const nota    = calcularNota(puntaje);
+  const cfg     = CONFIG_NOTAS[nota];
+  const circle  = document.getElementById('nota-circle');
+  circle.textContent = nota;
+  circle.className   = `nota-circle ${nota}`;
+  document.getElementById('nota-titulo').textContent = cfg.titulo;
+  document.getElementById('nota-desc').textContent   = cfg.descripcion;
+
+  document.getElementById('resultados-section').classList.add('visible');
+  document.getElementById('resultados-section').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   HISTORIAL
+   ════════════════════════════════════════════════════════════════════ */
+function mostrarHistorial() {
+  if (intentos.length < 2) return;
+  document.getElementById('historial-section').classList.add('visible');
+  document.getElementById('historial-lista').innerHTML = intentos.map(int => `
+    <div class="historial-item">
+      <span>Intento #${int.numero} · ${int.cantidad} subproblema${int.cantidad !== 1 ? 's' : ''}</span>
+      <span class="historial-nota" style="color:${colorNota(int.nota)}">${int.nota}</span>
+    </div>`).join('');
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   SOLUCIÓN MODELO
+   ════════════════════════════════════════════════════════════════════ */
+function mostrarSolucion() {
+  const sec = document.getElementById('solucion-section');
+  if (sec.classList.contains('visible')) return;
+  document.getElementById('solucion-lista').innerHTML = problemaActual.solucion.map((s, i) => `
+    <div class="solucion-item" style="animation-delay:${i*80}ms">
+      <span class="solucion-num">${i + 1}</span>
+      <div class="solucion-item-content">
+        <div class="solucion-item-texto">✅ ${escaparHTML(s.texto)}</div>
+        <div class="solucion-item-razon">${s.razon}</div>
+      </div>
+    </div>`).join('');
+  document.getElementById('solucion-nota').innerHTML = problemaActual.notaPedagogica;
+  sec.classList.add('visible');
+  setTimeout(() => sec.scrollIntoView({ behavior:'smooth', block:'start' }), 200);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   ENVÍO A GOOGLE SHEETS
+   ════════════════════════════════════════════════════════════════════ */
+function enviarASheets(datos) {
+  // Si no hay URL configurada, no hacer nada
+  if (!SHEETS_URL || SHEETS_URL === 'TU_URL_AQUI') return;
+
+  const statusEl = document.getElementById('sheets-status');
+  const statusTxt = document.getElementById('sheets-status-txt');
+  statusEl.className = 'sheets-status visible enviando';
+  statusTxt.textContent = 'Registrando en el sistema...';
+
+  // Usamos fetch con no-cors porque Apps Script tiene restricciones CORS
+  // Los datos van como parámetros GET para máxima compatibilidad
+  const params = new URLSearchParams(datos);
+  const url = `${SHEETS_URL}?${params.toString()}`;
+
+  fetch(url, { method: 'GET', mode: 'no-cors' })
+    .then(() => {
+      statusEl.className = 'sheets-status visible ok';
+      statusTxt.textContent = '✅ Datos registrados correctamente';
+      setTimeout(() => statusEl.classList.remove('visible'), 4000);
+    })
+    .catch(() => {
+      statusEl.className = 'sheets-status visible error';
+      statusTxt.textContent = '⚠️ No se pudo registrar (sin conexión o URL no configurada)';
+      setTimeout(() => statusEl.classList.remove('visible'), 5000);
+    });
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   CALIFICACIÓN Y UTILIDADES
+   ════════════════════════════════════════════════════════════════════ */
+function calcularPuntaje(evaluaciones) {
+  const suma = evaluaciones.reduce((a, e) =>
+    a + (e.estado==='correcto'?2 : e.estado==='ambiguo'?1 : 0), 0);
+  return evaluaciones.length ? (suma / (evaluaciones.length * 2)) * 100 : 0;
+}
+
+function calcularNota(p) {
+  return p>=90?'A' : p>=75?'B' : p>=55?'C' : p>=35?'D' : 'F';
+}
+
+const CONFIG_NOTAS = {
+  A:{ titulo:'¡Excelente descomposición!', descripcion:'Todos o casi todos los subproblemas son claros, precisos y accionables.' },
+  B:{ titulo:'Buena descomposición',       descripcion:'La mayoría están bien. Revisá los señalados en amarillo.' },
+  C:{ titulo:'Descomposición aceptable',   descripcion:'Varios subproblemas necesitan mejora. Prestá atención a la precisión.' },
+  D:{ titulo:'Necesita revisión',          descripcion:'Muchos subproblemas son vagos o incorrectos. Leé el feedback y reformulá.' },
+  F:{ titulo:'Para volver a intentar',     descripcion:'La descomposición tiene problemas importantes. Releé los conceptos y volvé a intentar.' }
+};
+
+function colorNota(n) {
+  return { A:'#34d399', B:'#86efac', C:'#fbbf24', D:'#fca000', F:'#f87171' }[n] || '#7a7f99';
+}
+
+function escaparHTML(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
